@@ -1,5 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <math.h>
+
+#define PI 3.14159
 
 int erodeValue;
 int dilateValue;
@@ -64,26 +67,30 @@ void on_trackbar(int, void*)
   cv::approxPolyDP(biggestThree[2], moreContours[2], epsilonVal, false);
   cv::drawContours(dst, biggestThree, -1, cv::Scalar(100, 100, 100), 2);
   int largestDistance = 0;
-  int distance;
-  cv::KeyLine line;
+  cv::Point startPoint;
+  cv::Point endPoint;
 
-  for(int i = 0; i < moreContours[0].size()-1; i++)
+  for(int x = 0; x < 3; x++)
   {
-    distance = (moreContours[0][i].x - moreContours[0][i+1].x) + (moreContours[0][i].y - moreContours[0][i+1].y);
-    if (distance > largestDistance)
+    for(int i = 0; i < moreContours[x].size()-1; i++)
     {
-      largestDistance = distance;
-      line.startPointX = moreContours[0][i].x;
-      line.startPointY = moreContours[0][i].y;
-      line.endPointX = moreContours[0][i+1].x;
-      line.endPointY = moreContours[0][i+1].y;
+      int distance = (moreContours[x][i].x - moreContours[x][i+1].x) + (moreContours[x][i].y - moreContours[x][i+1].y);
+      if (distance > largestDistance)
+      {
+        largestDistance = distance;
+        startPoint.x = moreContours[x][i].x;
+        startPoint.y = moreContours[x][i].y;
+        endPoint.x = moreContours[x][i+1].x;
+        endPoint.y = moreContours[x][i+1].y;
+      }
     }
   }
 
-  for(int i = 0; i < moreContours[0].size(); i++)
-  {
-    std::cout << moreContours[0][i].x << "," << moreContours[0][i].y << std::endl;
-  }
+  double opposite = endPoint.y-startPoint.y;
+  double adjacent = endPoint.x-startPoint.x;
+  double angle = -atan(opposite/adjacent)*180/PI;
+  std::cout << angle << std::endl;
+
   int lowestPoint = getMinPoint(biggestThree[0]);
   int lowestPointIndex = 0;
   for(int i = 1; i < 3; i++)
@@ -97,6 +104,7 @@ void on_trackbar(int, void*)
   }
   //cv::drawContours(dst, biggestThree, lowestPointIndex, cv::Scalar(255, 255, 255), 5);
   cv::drawContours(dst, moreContours, -1, cv::Scalar(255, 255, 255), 2);
+  cv::line(dst, startPoint, endPoint, cv::Scalar(200, 200, 200), 6);
   cv::imshow("Sobel Filter", dst);
   cv::resizeWindow("Sobel Filter", 600, 600);
 }
