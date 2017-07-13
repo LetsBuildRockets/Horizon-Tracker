@@ -1,6 +1,15 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <math.h>
+#include "easywsclient/easywsclient.hpp"
+#include "easywsclient/easywsclient.cpp"
+#include <assert.h>
+#include <stdio.h>
+#include <string>
+#include <sstream>
+
+using easywsclient::WebSocket;
+static WebSocket::pointer ws = NULL;
 
 #define PI 3.14159
 #define contrastValue 2.7
@@ -19,24 +28,45 @@ cv::Mat processVideo(cv::Mat);
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat);
 double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >);
 
-int main(int, char**)
+void handle_message(const std::string & message)
 {
-    cv::VideoCapture cap("/home/developer/Documents/Horizon-Tracker/HorizonVideo.avi");
-    if(!cap.isOpened())
-       return -1;
+    printf(">>> %s\n", message.c_str());
+    if (message == "world") { ws->close(); }
+}
 
-   //cv::namedWindow("Horizon Tracker",1);
+int main(int argc, char** argv)
+{
+    cv::Mat frame  = cv::imread(argv[1]);
+    //if(!cap.isOpened())
+    //   return -1;
+    ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
+    assert(ws);
+   cv::namedWindow("Horizon Tracker",1);
    for(;;)
    {
-       cv::Mat frame;
-       cap >> frame;
-       /*cv::Mat canny = processVideo(frame);
+
+      // cv::Mat frame;
+      // cap >> frame;
+       cv::Mat canny = processVideo(frame);
        std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
        double angleFromLine = getAngleFromLargestLine(biggestThreeContours);
-       std::cout << angleFromLine << std::endl;*/
-       //imshow("Horizon Tracker", canny);
-       if(cv::waitKey(30) >= 0) break;
+       std::cout << angleFromLine << std::endl;
+       std::ostringstream strs;
+       strs << angleFromLine;
+        ws->send(strs.str());
+        //while (ws->getReadyState() != WebSocket::CLOSED) {
+          ws->poll();
+          ws->dispatch(handle_message);
+          //std::cout << "i'm stuck" << std::endl;
+        //}
+       imshow("Horizon Tracker", canny);
+       int keyCode = cv::waitKey(30);
+       if(keyCode >= 0 && keyCode != 255) {
+         std::cout << keyCode << std::endl;
+         break;
+       }
    }
+   delete ws;
    return 0;
 }
 
