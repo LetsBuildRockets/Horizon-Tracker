@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     //   return -1;
     ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
     assert(ws);
-   cv::namedWindow("Horizon Tracker",1);
+  // cv::namedWindow("Horizon Tracker",1);
    for(;;)
    {
 
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
           ws->dispatch(handle_message);
           //std::cout << "i'm stuck" << std::endl;
         //}
-       imshow("Horizon Tracker", canny);
+    //   imshow("Horizon Tracker", canny);
        int keyCode = cv::waitKey(30);
        if(keyCode >= 0 && keyCode != 255) {
          std::cout << keyCode << std::endl;
