@@ -5,7 +5,7 @@
 #include <iostream>
 #include <linux/i2c-dev.h>
 
-#define I2C_ADDR 0x1E
+#define I2C_ADDR 0x1C
 
 int file_i2c;
 int length;
