@@ -19,8 +19,11 @@ int main()
 {
     int x, y, z;
     compassInit();
-    readCompass(x, y, z);
-    std::cout << "x: " << x << " y: " << y << " z: " << z << std::endl ;
+    while(1)
+    {
+      readCompass(x, y, z);
+      std::cout << "x: " << x/2048.0*360 << " y: " << y/2048.0*360 << " z: " << z/2048.0*360 << std::endl ;
+    }
 }
 
 void compassInit()
