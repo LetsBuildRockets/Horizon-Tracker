@@ -22,7 +22,7 @@ int main()
     while(1)
     {
       readCompass(x, y, z);
-      usleep(10000);
+      usleep(1000000);
       std::cout << "x: " << x/2048.0*360 << " y: " << y/2048.0*360 << " z: " << z/2048.0*360 << std::endl ;
     }
 }
@@ -43,13 +43,14 @@ void compassInit()
     return;
   }
   buffer[0] = 0x00;
-  buffer[1] = 0xB8;
+  buffer[1] = 0x90;
   length = 2;			//<<< Number of bytes to write
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
   {
   		/* ERROR HANDLING: i2c transaction failed */
   		printf("1) Failed to write to the i2c bus.\n");
   }
+  usleep(100000);
   buffer[0] = 0x02;
   buffer[1] = 0x00;
   length = 2;			//<<< Number of bytes to write
