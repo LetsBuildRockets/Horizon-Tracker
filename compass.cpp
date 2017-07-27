@@ -12,23 +12,23 @@ int length;
 unsigned int microseconds;
 unsigned char buffer[60] = {0};
 
+void openi2c();
 void compassInit();
 void readCompass(int&, int&, int&);
 
 int main()
 {
     int x, y, z;
-    compassInit();
+    openi2c();
     while(1)
     {
+      compassInit();
       readCompass(x, y, z);
       usleep(1000000);
       std::cout << "x: " << x/2048.0*360 << " y: " << y/2048.0*360 << " z: " << z/2048.0*360 << std::endl ;
     }
 }
-
-void compassInit()
-{
+void openi2c() {
   char *filename = (char*)"/dev/i2c-1";
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
 	{
@@ -36,6 +36,9 @@ void compassInit()
 		printf("Failed to open the i2c bus");
 		return;
 	}
+}
+void compassInit()
+{
   if (ioctl(file_i2c, I2C_SLAVE, I2C_ADDR) < 0)
   {
     printf("Failed to acquire bus access and/or talk to slave.\n");
