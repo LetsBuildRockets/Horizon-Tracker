@@ -5,7 +5,7 @@
 #include <iostream>
 #include <linux/i2c-dev.h>
 
-#define I2C_ADDR 0x1C
+#define I2C_ADDR 0x1E
 
 int file_i2c;
 int length;
@@ -54,12 +54,12 @@ void compassInit()
   		/* ERROR HANDLING: i2c transaction failed */
   		printf("2) Failed to write to the i2c bus.\n");
   }
-  usleep(10000);
+  usleep(100000);
 }
 
 void readCompass(int& x, int& y, int& z)
 {
-  unsigned char value[6];
+  unsigned char value[6]={0};
   buffer[0] = 0x03;
   length = 1;
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
@@ -69,6 +69,7 @@ void readCompass(int& x, int& y, int& z)
   }
   for(int i = 0; i < 6; i++)
   {
+    usleep(1000);
     length = 1;			//<<< Number of bytes to read
     if (read(file_i2c, buffer, length) != length)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
     {
@@ -77,7 +78,7 @@ void readCompass(int& x, int& y, int& z)
     }
     else
     {
-      printf("Data read: %x\n", buffer);
+      printf("Data read: %x\n", buffer[0]);
       value[i] = buffer[0];
     }
   }
