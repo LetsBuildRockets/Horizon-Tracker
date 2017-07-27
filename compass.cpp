@@ -18,9 +18,9 @@ int main()
 {
     int x, y, z;
     compassInit();
-    /*readCompass(x, y, z);
+    readCompass(x, y, z);
     std::cout << "x: " << x << " y: " << y << " z: " << z << std::endl ;
-*/}
+}
 
 void compassInit()
 {
@@ -43,7 +43,7 @@ void compassInit()
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
   {
   		/* ERROR HANDLING: i2c transaction failed */
-  		printf("Failed to write to the i2c bus.\n");
+  		printf("1) Failed to write to the i2c bus.\n");
   }
   buffer[0] = 0x02;
   buffer[1] = 0x00;
@@ -51,7 +51,7 @@ void compassInit()
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
   {
   		/* ERROR HANDLING: i2c transaction failed */
-  		printf("Failed to write to the i2c bus.\n");
+  		printf("2) Failed to write to the i2c bus.\n");
   }
 }
 
@@ -63,7 +63,7 @@ void readCompass(int& x, int& y, int& z)
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
   {
   		/* ERROR HANDLING: i2c transaction failed */
-  		printf("Failed to write to the i2c bus.\n");
+  		printf("3) Failed to write to the i2c bus.\n");
   }
   for(int i = 0; i < 6; i++)
   {
