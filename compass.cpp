@@ -22,6 +22,7 @@ int main()
     while(1)
     {
       readCompass(x, y, z);
+      usleep(10000);
       std::cout << "x: " << x/2048.0*360 << " y: " << y/2048.0*360 << " z: " << z/2048.0*360 << std::endl ;
     }
 }
