@@ -9,6 +9,7 @@
 
 int file_i2c;
 int length;
+unsigned int microseconds;
 unsigned char buffer[60] = {0};
 
 void compassInit();
@@ -53,6 +54,7 @@ void compassInit()
   		/* ERROR HANDLING: i2c transaction failed */
   		printf("2) Failed to write to the i2c bus.\n");
   }
+  usleep(10000);
 }
 
 void readCompass(int& x, int& y, int& z)
@@ -75,7 +77,7 @@ void readCompass(int& x, int& y, int& z)
     }
     else
     {
-      printf("Data read: %s\n", buffer);
+      printf("Data read: %x\n", buffer);
       value[i] = buffer[0];
     }
   }
