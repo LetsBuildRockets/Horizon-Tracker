@@ -1,15 +1,15 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <math.h>
-#include "easywsclient/easywsclient.hpp"
-#include "easywsclient/easywsclient.cpp"
+//#include "easywsclient/easywsclient.hpp"
+//#include "easywsclient/easywsclient.cpp"
 #include <assert.h>
 #include <stdio.h>
 #include <string>
 #include <sstream>
 
-using easywsclient::WebSocket;
-static WebSocket::pointer ws = NULL;
+//using easywsclient::WebSocket;
+//static WebSocket::pointer ws = NULL;
 
 #define PI 3.14159
 #define contrastValue 2.7
@@ -28,58 +28,75 @@ cv::Mat processVideo(cv::Mat);
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat);
 double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >);
 
-void handle_message(const std::string & message)
+/*void handle_message(const std::string & message)
 {
     printf(">>> %s\n", message.c_str());
     if (message == "world") { ws->close(); }
-}
+}*/
 
-int main(int argc, char** argv)
+int main()
 {
-    cv::Mat frame  = cv::imread(argv[1]);
-    //if(!cap.isOpened())
-    //   return -1;
-    ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
-    assert(ws);
+    std::cout << "hi there" << std::endl;
+    cv::VideoCapture cap(0);
+    if(!cap.isOpened()) {
+	std::cout << "yo this didn't open" << std::endl;
+ 	 return -1;
+	}
+   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
+    //assert(ws);
   // cv::namedWindow("Horizon Tracker",1);
    for(;;)
    {
 
-      // cv::Mat frame;
-      // cap >> frame;
+       cv::Mat frame;
+       cap >> frame;
        cv::Mat canny = processVideo(frame);
-       std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
-       double angleFromLine = getAngleFromLargestLine(biggestThreeContours);
-       std::cout << angleFromLine << std::endl;
-       std::ostringstream strs;
-       strs << angleFromLine;
-        ws->send(strs.str());
+  //     std::cout << "broken canny" << std::endl;
+    //   std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+    //   std::cout << "broken contours" << std::endl;
+       /*if(biggestThreeContours.size() >= 3) {
+           double angleFromLine = getAngleFromLargestLine(biggestThreeContours);
+           std::cout << angleFromLine << std::endl;
+       }*/
+       std::cout << "hi" << std::endl;
+       //std::ostringstream strs;
+       //strs << angleFromLine;
+       // ws->send(strs.str());
         //while (ws->getReadyState() != WebSocket::CLOSED) {
-          ws->poll();
-          ws->dispatch(handle_message);
+      //    ws->poll();
+       //   ws->dispatch(handle_message);
           //std::cout << "i'm stuck" << std::endl;
         //}
     //   imshow("Horizon Tracker", canny);
-       int keyCode = cv::waitKey(30);
+   /*    int keyCode = cv::waitKey(30);
        if(keyCode >= 0 && keyCode != 255) {
          std::cout << keyCode << std::endl;
          break;
-       }
+       }*/
    }
-   delete ws;
+   //delete ws;
    return 0;
 }
 
 cv::Mat processVideo(cv::Mat src)
 {
+  cv::Mat redChannelOnly;
   cv::Mat dst;
   src.convertTo(dst, -1, contrastValue, 0);
+  std::cout << "contrast" << std::endl;
   cv::medianBlur(dst, dst, 3);
+  std::cout << "blur" << std::endl;
   cv::Sobel(dst, dst, -1, 1, 1, 7);
-  cv::inRange(dst, cv::Scalar(0, 0, 255), cv::Scalar(0, 0, 255), dst);
+  std::cout << "sobel" << std::endl;
+  int from_to[] = { 2, 2 };
+  cv::mixChannels(&dst, 1, redChannelOnly, 1, from_to, 1);
+  std::cout << "inrange" << std::endl;
   cv::dilate(dst, dst, dilateKernel);
+  std::cout << "dilate" << std::endl;
   cv::erode(dst, dst, erodeKernel, cv::Point(-1, -1), 2);
+  std::cout << "erode" << std::endl;
   cv::Canny(dst, dst, 0, 255, 3);
+  std::cout << "canny" << std::endl;
   return dst;
 }
 
