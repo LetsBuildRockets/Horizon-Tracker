@@ -24,7 +24,7 @@ cv::Mat dilateKernel = cv::getStructuringElement( cv::MORPH_ELLIPSE,
                                         cv::Size( 2*dilateValue + 1, 2*dilateValue+1 ),
                                         cv::Point( dilateValue, dilateValue ) );
 
-cv::Mat processVideo(cv::Mat);
+void processVideo(cv::Mat, cv::Mat&);
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat);
 double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >);
 
@@ -34,23 +34,28 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >);
     if (message == "world") { ws->close(); }
 }*/
 
-int main()
+int main(/*int argc, char** argv*/)
 {
     std::cout << "hi there" << std::endl;
     cv::VideoCapture cap(0);
     if(!cap.isOpened()) {
-	std::cout << "yo this didn't open" << std::endl;
- 	 return -1;
-	}
+	     std::cout << "yo this didn't open" << std::endl;
+ 	     return -1;
+	    }
    // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
     //assert(ws);
-  // cv::namedWindow("Horizon Tracker",1);
+  //cv::namedWindow("Horizon Tracker",1);
    for(;;)
    {
-
-       cv::Mat frame;
-       cap >> frame;
-       cv::Mat canny = processVideo(frame);
+        cv::Mat frame;
+      //  frame = cv::imread(argv[1]);
+        cv::resize(frame, frame, cv::Size(640, 360), 0, 0, cv::INTER_CUBIC);
+        cap >> frame;
+        std::cout << "Width : " << frame.size().width << std::endl;
+        std::cout << "Height: " << frame.size().height << std::endl;
+        cv::Mat canny;
+        processVideo(frame, canny);
+      //  imshow("Horizon Tracker", canny);
   //     std::cout << "broken canny" << std::endl;
     //   std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
     //   std::cout << "broken contours" << std::endl;
@@ -67,29 +72,25 @@ int main()
        //   ws->dispatch(handle_message);
           //std::cout << "i'm stuck" << std::endl;
         //}
-    //   imshow("Horizon Tracker", canny);
-   /*    int keyCode = cv::waitKey(30);
+      int keyCode = cv::waitKey(0);
        if(keyCode >= 0 && keyCode != 255) {
          std::cout << keyCode << std::endl;
          break;
-       }*/
+       }
    }
    //delete ws;
    return 0;
 }
 
-cv::Mat processVideo(cv::Mat src)
+void processVideo(cv::Mat src, cv::Mat& dst)
 {
-  cv::Mat redChannelOnly;
-  cv::Mat dst;
   src.convertTo(dst, -1, contrastValue, 0);
   std::cout << "contrast" << std::endl;
   cv::medianBlur(dst, dst, 3);
   std::cout << "blur" << std::endl;
   cv::Sobel(dst, dst, -1, 1, 1, 7);
   std::cout << "sobel" << std::endl;
-  int from_to[] = { 2, 2 };
-  cv::mixChannels(&dst, 1, redChannelOnly, 1, from_to, 1);
+  cv::inRange(dst, cv::Scalar(0, 0, 255), cv::Scalar(0, 0, 255), dst);
   std::cout << "inrange" << std::endl;
   cv::dilate(dst, dst, dilateKernel);
   std::cout << "dilate" << std::endl;
@@ -97,7 +98,6 @@ cv::Mat processVideo(cv::Mat src)
   std::cout << "erode" << std::endl;
   cv::Canny(dst, dst, 0, 255, 3);
   std::cout << "canny" << std::endl;
-  return dst;
 }
 
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat cannyMatrix)
