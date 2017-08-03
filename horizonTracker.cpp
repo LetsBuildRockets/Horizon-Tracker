@@ -17,12 +17,18 @@
 #define dilateValue 20
 #define epsilonValue 10
 
+const cv::Size imgSize(128, 72);
+
 cv::Mat erodeKernel = cv::getStructuringElement( cv::MORPH_ELLIPSE,
                                     cv::Size( 2*erodeValue + 1, 2*erodeValue+1 ),
                                     cv::Point( erodeValue, erodeValue ) );
 cv::Mat dilateKernel = cv::getStructuringElement( cv::MORPH_ELLIPSE,
                                         cv::Size( 2*dilateValue + 1, 2*dilateValue+1 ),
                                         cv::Point( dilateValue, dilateValue ) );
+
+//cv::Scalar red(0, 0, 255);
+
+cv::Mat red(imgSize, CV_8UC3, cv::Scalar(0,0,255));
 
 void processVideo(cv::Mat, cv::Mat&);
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat);
@@ -36,7 +42,6 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >);
 
 int main(/*int argc, char** argv*/)
 {
-    std::cout << "hi there" << std::endl;
     cv::VideoCapture cap(0);
     if(!cap.isOpened()) {
 	     std::cout << "yo this didn't open" << std::endl;
@@ -49,10 +54,8 @@ int main(/*int argc, char** argv*/)
    {
         cv::Mat frame;
       //  frame = cv::imread(argv[1]);
-        cv::resize(frame, frame, cv::Size(640, 360), 0, 0, cv::INTER_CUBIC);
         cap >> frame;
-        std::cout << "Width : " << frame.size().width << std::endl;
-        std::cout << "Height: " << frame.size().height << std::endl;
+        cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
         cv::Mat canny;
         processVideo(frame, canny);
       //  imshow("Horizon Tracker", canny);
@@ -72,11 +75,11 @@ int main(/*int argc, char** argv*/)
        //   ws->dispatch(handle_message);
           //std::cout << "i'm stuck" << std::endl;
         //}
-      int keyCode = cv::waitKey(0);
-       if(keyCode >= 0 && keyCode != 255) {
-         std::cout << keyCode << std::endl;
-         break;
-       }
+      ///int keyCode = cv::waitKey(0);
+      // if(keyCode >= 0 && keyCode != 255) {
+       //  std::cout << keyCode << std::endl;
+       //  break;
+       //}/
    }
    //delete ws;
    return 0;
@@ -89,13 +92,9 @@ void processVideo(cv::Mat src, cv::Mat& dst)
   cv::medianBlur(dst, dst, 3);
   std::cout << "blur" << std::endl;
   cv::Sobel(dst, dst, -1, 1, 1, 7);
-  std::cout << "sobel" << std::endl;
-  cv::inRange(dst, cv::Scalar(0, 0, 255), cv::Scalar(0, 0, 255), dst);
-  std::cout << "inrange" << std::endl;
+  cv::inRange(dst, red, red, dst);
   cv::dilate(dst, dst, dilateKernel);
-  std::cout << "dilate" << std::endl;
   cv::erode(dst, dst, erodeKernel, cv::Point(-1, -1), 2);
-  std::cout << "erode" << std::endl;
   cv::Canny(dst, dst, 0, 255, 3);
   std::cout << "canny" << std::endl;
 }
