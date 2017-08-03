@@ -136,8 +136,11 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree
   std::vector<std::vector<cv::Point> > approximatedContours;
   approximatedContours.resize(3);
   cv::approxPolyDP(biggestThree[0], approximatedContours[0], epsilonValue, false);
+  std::cout << "1" << std::endl;
   cv::approxPolyDP(biggestThree[1], approximatedContours[1], epsilonValue, false);
+  std::cout << "2" << std::endl;
   cv::approxPolyDP(biggestThree[2], approximatedContours[2], epsilonValue, false);
+  std::cout << "3" << std::endl;
   //cv::drawContours(dst, biggestThree, -1, cv::Scalar(100, 100, 100), 2);
   int largestDistance = 0;
   cv::Point startPoint;
