@@ -60,12 +60,12 @@ int main(/*int argc, char** argv*/)
         processVideo(frame, canny);
       //  imshow("Horizon Tracker", canny);
   //     std::cout << "broken canny" << std::endl;
-    //   std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
-    //   std::cout << "broken contours" << std::endl;
-       /*if(biggestThreeContours.size() >= 3) {
+       std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+       std::cout << "broken contours" << std::endl;
+       if(biggestThreeContours.size() >= 3) {
            double angleFromLine = getAngleFromLargestLine(biggestThreeContours);
            std::cout << angleFromLine << std::endl;
-       }*/
+       }
        std::cout << "hi" << std::endl;
        //std::ostringstream strs;
        //strs << angleFromLine;
