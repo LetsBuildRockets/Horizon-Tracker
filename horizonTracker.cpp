@@ -131,20 +131,22 @@ std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat cannyMatrix)
 }
 double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree)
 {
+  int numberofContours = 0;
   std::vector<std::vector<cv::Point> > approximatedContours;
   approximatedContours.resize(3);
   for(int i = 0; i < 3; i++) {
     if(biggestThree[i].size() > 0 ) {
+      numberofContours++;
     cv::approxPolyDP(biggestThree[i], approximatedContours[i], epsilonValue, false);
     std::cout << i << std::endl;
   }
 }
   //cv::drawContours(dst, biggestThree, -1, cv::Scalar(100, 100, 100), 2);
   int largestDistance = 0;
-  cv::Point startPoint;
-  cv::Point endPoint;
+  cv::Point startPoint(0,0);
+  cv::Point endPoint(0,0);
 
-  for(int x = 0; x < 3; x++)
+  for(int x = 0; x < numberofContours; x++)
   {
     for(int i = 0; i < approximatedContours[x].size()-1; i++)
     {
