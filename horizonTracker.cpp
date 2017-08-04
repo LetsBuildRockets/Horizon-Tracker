@@ -39,12 +39,10 @@ void processVideo(cv::Mat, cv::Mat&);
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat&);
 double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >,cv::Mat &);
 long getTime();
-void range(cv::Mat &, cv::Mat&, int, int);
+void range(cv::Mat &, cv::Mat&, int);
 
 
-int endOne = imgSize.height >> 2;
-int endTwo = imgSize.height >> 1;
-int endThree = 3 * imgSize.height >> 2;
+const int fourthHeight = imgSize.height / 4;
 
 /*void handle_message(const std::string & message)
 {
@@ -63,7 +61,7 @@ int main(int argc, char** argv) {
   long lasttime = getTime();
   float totalFPS = 0;
   int framesCount = 0;
-  //cv::namedWindow("Horizon Tracker",1);
+  cv::namedWindow("Horizon Tracker",1);
   for(;;) {
       cv::Mat frame;
       frame = cv::imread(argv[1]);
@@ -74,7 +72,6 @@ int main(int argc, char** argv) {
   //     std::cout << "broken canny" << std::endl;
      std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
      double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
-     //imshow("Horizon Tracker", canny);
      //std::cout << angleFromLine << std::endl;
      //std::ostringstream strs;
      //strs << angleFromLine;
@@ -90,19 +87,23 @@ int main(int argc, char** argv) {
     totalFPS += localFPS;
     printf("fps: %f\n", totalFPS/framesCount);
     lasttime = now;
-    /*int keyCode = cv::waitKey(1);
+    int keyCode = cv::waitKey(1);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
-    }*/
+    }
   }
   //delete ws;
   return 0;
 }
 
-void range(cv::Mat & dst, cv::Mat & canny, int start, int end) {
-  for(int i = start; i < end; i++) {
+void range(cv::Mat & src, cv::Mat & canny, int offset) {
+  cv::Mat dst;
+  src.convertTo(dst, -1, contrastValue, 0);
+  cv::medianBlur(dst, dst, 3);
+  cv::Sobel(dst, dst, -1, 1, 1, 7);
+  for(int i = 0; i < dst.rows; i++) {
     cv::Vec3b* pixel = dst.ptr<cv::Vec3b>(i);
-    uchar* newPixel = canny.ptr<uchar>(i);
+    uchar* newPixel = canny.ptr<uchar>(i+offset);
     for(int j = 0; j < dst.cols; j++) {
       if(pixel[j][2] > 200) {
         if((!pixel[j][0]) && (!pixel[j][1])) {
@@ -115,23 +116,29 @@ void range(cv::Mat & dst, cv::Mat & canny, int start, int end) {
 void processVideo(cv::Mat src, cv::Mat& dst)
 {
   cv::Mat canny(imgSize, CV_8UC1, black);
-  src.convertTo(dst, -1, contrastValue, 0);
-  cv::medianBlur(dst, dst, 3);
-  cv::Sobel(dst, dst, -1, 1, 1, 7);
+  cv::Mat img1 = cv::Mat(src, cv::Rect(0, 0*fourthHeight, imgSize.width, fourthHeight));
+  cv::Mat img2 = cv::Mat(src, cv::Rect(0, 1*fourthHeight, imgSize.width, fourthHeight));
+  cv::Mat img3 = cv::Mat(src, cv::Rect(0, 2*fourthHeight, imgSize.width, fourthHeight));
+  cv::Mat img4 = cv::Mat(src, cv::Rect(0, 3*fourthHeight, imgSize.width, fourthHeight));
 
-  /*std::thread tOne (range, std::ref(dst), std::ref(canny), 0, endOne);
-  std::thread tTwo (range, std::ref(dst), std::ref(canny), endOne+1, endTwo);
-  std::thread tThree (range, std::ref(dst), std::ref(canny), endTwo+1, endThree);
-  std::thread tFour (range, std::ref(dst), std::ref(canny), endThree+1, dst.rows);
+  std::thread tOne (range, std::ref(img1), std::ref(canny), 0*fourthHeight);
+  std::thread tTwo (range, std::ref(img2), std::ref(canny), 1*fourthHeight);
+  std::thread tThree (range, std::ref(img3), std::ref(canny), 2*fourthHeight);
+  std::thread tFour (range, std::ref(img4), std::ref(canny), 3*fourthHeight);
   tOne.join();
   tTwo.join();
   tThree.join();
-  tFour.join();*/
-  //range(dst, canny, 0, dst.rows);
-  cv::inRange(dst, lowRed, red, canny);
+  tFour.join();
+  /*range(img1, canny, 0*fourthHeight);
+  range(img2, canny, 1*fourthHeight);
+  range(img3, canny, 2*fourthHeight);
+  range(img4, canny, 3*fourthHeight);*/
+  //cv::inRange(dst, lowRed, red, canny);
   cv::dilate(canny, canny, dilateKernel);
   cv::erode(canny, canny, erodeKernel, negOne, 2);
   cv::Canny(canny, dst, 0, 255, 3);
+  imshow("Horizon Tracker", dst);
+
 }
 
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat & cannyMatrix)
