@@ -21,7 +21,7 @@ struct timeval tp;
 #define epsilonValue 10
 
 const cv::Point negOne(-1, -1);
-const cv::Size imgSize(320, 240);
+const cv::Size imgSize(320/2, 240/2);
 const cv::Scalar black(0);
 
 const cv::Mat erodeKernel = cv::getStructuringElement( cv::MORPH_RECT ,
@@ -51,11 +51,11 @@ const int fourthHeight = imgSize.height / 4;
 }*/
 
 int main(int argc, char** argv) {
-  /*cv::VideoCapture cap(0);
+  cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
-  }*/
+  }
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
   long lasttime = getTime();
@@ -63,12 +63,12 @@ int main(int argc, char** argv) {
   int framesCount = 0;
   //cv::namedWindow("Horizon Tracker",1);
   cv::Mat frame;
-  frame = cv::imread(argv[1]);
+  //frame = cv::imread(argv[1]);
   for(;;) {
      // double start = getTime();
       //double end = getTime();
       //printf("time to change contrast: %f\n", end-start);
-    // cap >> frame;
+     cap >> frame;
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
       processVideo(frame, canny);
@@ -90,10 +90,10 @@ int main(int argc, char** argv) {
     totalFPS += localFPS;
     printf("fps: %f\n", totalFPS/framesCount);
     lasttime = now;
-    int keyCode = cv::waitKey(1);
+    /*int keyCode = cv::waitKey(1);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
-    }
+    }*/
   }
   //delete ws;
   return 0;
