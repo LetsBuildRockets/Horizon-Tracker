@@ -17,7 +17,7 @@ struct timeval tp;
 #define PI 3.14159
 #define contrastValue 2.7
 #define erodeValue 8
-#define dilateValue 10
+#define dilateValue 9
 #define epsilonValue 10
 
 const cv::Point negOne(-1, -1);
@@ -35,10 +35,10 @@ const cv::Mat dilateKernel = cv::getStructuringElement( cv::MORPH_RECT ,
 const cv::Mat lowRed(imgSize, CV_8UC3, cv::Scalar(0,0,200));
 const cv::Mat red(imgSize, CV_8UC3, cv::Scalar(0,0,255));
 
-void processVideo(cv::Mat, cv::Mat&);
+void processVideo(cv::Mat&, cv::Mat&);
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat&);
 double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >,cv::Mat &);
-long getTime();
+double getTime();
 void range(cv::Mat &, cv::Mat&, int);
 
 
@@ -64,14 +64,16 @@ int main(int argc, char** argv) {
   cv::namedWindow("Horizon Tracker",1);
   for(;;) {
       cv::Mat frame;
+      double start = getTime();
       frame = cv::imread(argv[1]);
+      double end = getTime();
+      printf("time to change contrast: %f\n", end-start);
     // cap >> frame;
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
       processVideo(frame, canny);
-  //     std::cout << "broken canny" << std::endl;
-     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
-     double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
+    // std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+    // double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
      //std::cout << angleFromLine << std::endl;
      //std::ostringstream strs;
      //strs << angleFromLine;
@@ -99,7 +101,7 @@ int main(int argc, char** argv) {
 void range(cv::Mat & src, cv::Mat & canny, int offset) {
   cv::Mat dst;
   src.convertTo(dst, -1, contrastValue, 0);
-  cv::medianBlur(dst, dst, 3);
+  cv::medianBlur( dst, dst, 3 );
   cv::Sobel(dst, dst, -1, 1, 1, 7);
   for(int i = 0; i < dst.rows; i++) {
     cv::Vec3b* pixel = dst.ptr<cv::Vec3b>(i);
@@ -113,7 +115,7 @@ void range(cv::Mat & src, cv::Mat & canny, int offset) {
     }
   }
 }
-void processVideo(cv::Mat src, cv::Mat& dst)
+void processVideo(cv::Mat & src, cv::Mat& dst)
 {
   cv::Mat canny(imgSize, CV_8UC1, black);
   cv::Mat img1 = cv::Mat(src, cv::Rect(0, 0*fourthHeight, imgSize.width, fourthHeight));
@@ -129,15 +131,11 @@ void processVideo(cv::Mat src, cv::Mat& dst)
   tTwo.join();
   tThree.join();
   tFour.join();
-  /*range(img1, canny, 0*fourthHeight);
-  range(img2, canny, 1*fourthHeight);
-  range(img3, canny, 2*fourthHeight);
-  range(img4, canny, 3*fourthHeight);*/
-  //cv::inRange(dst, lowRed, red, canny);
+
   cv::dilate(canny, canny, dilateKernel);
-  cv::erode(canny, canny, erodeKernel, negOne, 2);
+  cv::erode(canny, canny, erodeKernel, negOne, 1);
   cv::Canny(canny, dst, 0, 255, 3);
-  imshow("Horizon Tracker", dst);
+  imshow("Horizon Tracker", canny);
 
 }
 
@@ -193,7 +191,7 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree
   {
     for(int i = 0; i < approximatedContours[x].size()-1; i++)
     {
-      int distance = (approximatedContours[x][i].x - approximatedContours[x][i+1].x) + (approximatedContours[x][i].y - approximatedContours[x][i+1].y);
+      int distance = pow((approximatedContours[x][i].x - approximatedContours[x][i+1].x),2) + pow((approximatedContours[x][i].y - approximatedContours[x][i+1].y),2);
       if (distance > largestDistance)
       {
         largestDistance = distance;
@@ -211,8 +209,8 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree
   return angle;
 }
 
-long getTime(){
+double getTime(){
   gettimeofday(&tp, NULL);
-  long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+  double ms = tp.tv_sec * 1000 + tp.tv_usec / 1000.0;
   return ms;
 }
