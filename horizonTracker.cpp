@@ -17,7 +17,7 @@ struct timeval tp;
 #define PI 3.14159
 #define contrastValue 2.7
 #define erodeValue 8
-#define dilateValue 9
+#define dilateValue 10
 #define epsilonValue 10
 
 const cv::Point negOne(-1, -1);
@@ -62,8 +62,8 @@ int main(int argc, char** argv) {
   float totalFPS = 0;
   int framesCount = 0;
   //cv::namedWindow("Horizon Tracker",1);
-      cv::Mat frame;
-      frame = cv::imread(argv[1]);
+  cv::Mat frame;
+  frame = cv::imread(argv[1]);
   for(;;) {
      // double start = getTime();
       //double end = getTime();
@@ -72,8 +72,9 @@ int main(int argc, char** argv) {
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
       processVideo(frame, canny);
-    // std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
-    // double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
+     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+     double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
+     //imshow("Horizon Tracker", canny);
      //std::cout << angleFromLine << std::endl;
      //std::ostringstream strs;
      //strs << angleFromLine;
@@ -89,10 +90,10 @@ int main(int argc, char** argv) {
     totalFPS += localFPS;
     printf("fps: %f\n", totalFPS/framesCount);
     lasttime = now;
-/*    int keyCode = cv::waitKey(1);
+    int keyCode = cv::waitKey(1);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
-    }*/
+    }
   }
   //delete ws;
   return 0;
@@ -136,8 +137,6 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
   cv::dilate(canny, canny, dilateKernel);
   cv::erode(canny, canny, erodeKernel, negOne, 1);
   cv::Canny(canny, dst, 0, 255, 3);
-  //imshow("Horizon Tracker", canny);
-
 }
 
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat & cannyMatrix)
