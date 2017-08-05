@@ -61,13 +61,13 @@ int main(int argc, char** argv) {
   long lasttime = getTime();
   float totalFPS = 0;
   int framesCount = 0;
-  cv::namedWindow("Horizon Tracker",1);
-  for(;;) {
+  //cv::namedWindow("Horizon Tracker",1);
       cv::Mat frame;
-      double start = getTime();
       frame = cv::imread(argv[1]);
-      double end = getTime();
-      printf("time to change contrast: %f\n", end-start);
+  for(;;) {
+     // double start = getTime();
+      //double end = getTime();
+      //printf("time to change contrast: %f\n", end-start);
     // cap >> frame;
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
@@ -89,10 +89,10 @@ int main(int argc, char** argv) {
     totalFPS += localFPS;
     printf("fps: %f\n", totalFPS/framesCount);
     lasttime = now;
-    int keyCode = cv::waitKey(1);
+/*    int keyCode = cv::waitKey(1);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
-    }
+    }*/
   }
   //delete ws;
   return 0;
@@ -101,7 +101,8 @@ int main(int argc, char** argv) {
 void range(cv::Mat & src, cv::Mat & canny, int offset) {
   cv::Mat dst;
   src.convertTo(dst, -1, contrastValue, 0);
-  cv::medianBlur( dst, dst, 3 );
+//  cv::medianBlur( dst, dst, 3 );
+  cv::blur(dst, dst, cv::Size(3, 3));
   cv::Sobel(dst, dst, -1, 1, 1, 7);
   for(int i = 0; i < dst.rows; i++) {
     cv::Vec3b* pixel = dst.ptr<cv::Vec3b>(i);
@@ -135,7 +136,7 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
   cv::dilate(canny, canny, dilateKernel);
   cv::erode(canny, canny, erodeKernel, negOne, 1);
   cv::Canny(canny, dst, 0, 255, 3);
-  imshow("Horizon Tracker", canny);
+  //imshow("Horizon Tracker", canny);
 
 }
 
