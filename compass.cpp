@@ -15,13 +15,13 @@ unsigned char buffer[60] = {0};
 
 void openi2c();
 void compassInit();
-void readCompass(int&, int&, int&);
+void readCompass(short&, short&, short&);
 int I2CRead(unsigned char, unsigned char&);
 int I2CWrite(unsigned char, unsigned char);
 
 int main()
 {
-    int x, y, z;
+    short x, y, z;
     openi2c();
     compassInit();
     while(1)
@@ -49,7 +49,7 @@ void compassInit()
   usleep(100000);
 }
 
-void readCompass(int& x, int& y, int& z)
+void readCompass(short& x, short& y, short& z)
 {
   unsigned char value[6];
   I2CRead(0x03, value[0]);
