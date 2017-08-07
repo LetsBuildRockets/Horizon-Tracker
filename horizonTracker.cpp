@@ -51,11 +51,11 @@ const int fourthHeight = imgSize.height / 4;
 }*/
 
 int main(int argc, char** argv) {
-  cv::VideoCapture cap(0);
+/*  cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
-  }
+  }*/
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
   long lasttime = getTime();
@@ -63,17 +63,26 @@ int main(int argc, char** argv) {
   int framesCount = 0;
   //cv::namedWindow("Horizon Tracker",1);
   cv::Mat frame;
-  //frame = cv::imread(argv[1]);
+  frame = cv::imread(argv[1]);
   for(;;) {
      // double start = getTime();
       //double end = getTime();
       //printf("time to change contrast: %f\n", end-start);
-     cap >> frame;
+     //cap >> frame;
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
       processVideo(frame, canny);
      std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
      double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
+     if (framesCount % 10 == 0)
+     {
+       cv::imwrite("frames/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
+       cv::imwrite("frames/canny" + std::to_string(framesCount) + ".jpg", canny);
+    }
+     std::ofstream horizonTrackerData;
+     horizonTrackerData.open("frame.txt", std::ofstream::app);
+     horizonTrackerData << "frame number: " << framesCount << "\t" << "angle: " << angleFromLine << "\t" << "compass heading: " << 123 << "\n";
+     horizonTrackerData.close();
      //imshow("Horizon Tracker", canny);
      //std::cout << angleFromLine << std::endl;
      //std::ostringstream strs;
@@ -90,10 +99,10 @@ int main(int argc, char** argv) {
     totalFPS += localFPS;
     printf("fps: %f\n", totalFPS/framesCount);
     lasttime = now;
-    /*int keyCode = cv::waitKey(1);
+    int keyCode = cv::waitKey(1);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
-    }*/
+    }
   }
   //delete ws;
   return 0;
@@ -202,7 +211,7 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree
       }
     }
   }
-  //cv::line(dst, startPoint, endPoint, cv::Scalar(255,255,255),3);
+  cv::line(dst, startPoint, endPoint, cv::Scalar(255,255,255),3);
   double opposite = endPoint.y-startPoint.y;
   double adjacent = endPoint.x-startPoint.x;
   double angle = -atan(opposite/adjacent)*180/PI;
