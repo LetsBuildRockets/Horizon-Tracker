@@ -23,15 +23,15 @@ int main()
 {
     int x, y, z;
     openi2c();
+    compassInit();
     while(1)
     {
-      compassInit();
       readCompass(x, y, z);
       std::cout << "x: " << x/2048.0*360 << " y: " << y/2048.0*360 << " z: " << z/2048.0*360 << std::endl ;
       usleep(1000000);
-      close(file_i2c);
-      return 0;
     }
+    close(file_i2c);
+    return 0;
 }
 void openi2c() {
   char *filename = (char*)"/dev/i2c-1";
@@ -52,7 +52,7 @@ void compassInit()
 void readCompass(int& x, int& y, int& z)
 {
   unsigned char value[6];
-
+  I2CRead(0x03, value);
   /*buffer[0] = 0x03;
   length = 1;
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
