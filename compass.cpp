@@ -5,7 +5,7 @@
 #include <iostream>
 #include <linux/i2c-dev.h>
 
-#define I2C_ADDR 0x1E
+#define I2C_ADDR (0x3C >> 1)
 
 int file_i2c;
 int length;
@@ -46,12 +46,21 @@ void compassInit()
     return;
   }
   buffer[0] = 0x00;
-  buffer[1] = 0x90;
+  buffer[1] = 0x70;
   length = 2;			//<<< Number of bytes to write
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
   {
   		/* ERROR HANDLING: i2c transaction failed */
   		printf("1) Failed to write to the i2c bus.\n");
+  }
+  usleep(100000);
+  buffer[0] = 0x01;
+  buffer[1] = 0xA0;
+  length = 2;			//<<< Number of bytes to write
+  if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+  {
+  		/* ERROR HANDLING: i2c transaction failed */
+  		printf("2) Failed to write to the i2c bus.\n");
   }
   usleep(100000);
   buffer[0] = 0x02;
@@ -68,11 +77,11 @@ void compassInit()
 void readCompass(int& x, int& y, int& z)
 {
   unsigned char value[6]={0};
-  buffer[0] = 0x03;
+  /*buffer[0] = 0x03;
   length = 1;
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
   {
-  		/* ERROR HANDLING: i2c transaction failed */
+  		// ERROR HANDLING: i2c transaction failed 
   		printf("3) Failed to write to the i2c bus.\n");
   }
   for(int i = 0; i < 6; i++)
@@ -89,7 +98,7 @@ void readCompass(int& x, int& y, int& z)
       printf("Data read: %x\n", buffer[0]);
       value[i] = buffer[0];
     }
-  }
+  }*/
   x = (value[0] << 8) | value[1];
   z = (value[2] << 8) | value[3];
   y = (value[4] << 8) | value[5];
