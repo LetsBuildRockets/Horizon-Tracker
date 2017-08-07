@@ -52,7 +52,12 @@ void compassInit()
 void readCompass(int& x, int& y, int& z)
 {
   unsigned char value[6];
-  I2CRead(0x03, value);
+  I2CRead(0x03, value[0]);
+  I2CRead(0x04, value[1]);
+  I2CRead(0x05, value[2]);
+  I2CRead(0x06, value[3]);
+  I2CRead(0x07, value[4]);
+  I2CRead(0x08, value[5]);
   /*buffer[0] = 0x03;
   length = 1;
   if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
