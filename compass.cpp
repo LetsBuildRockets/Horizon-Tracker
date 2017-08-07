@@ -29,6 +29,8 @@ int main()
       readCompass(x, y, z);
       std::cout << "x: " << x/2048.0*360 << " y: " << y/2048.0*360 << " z: " << z/2048.0*360 << std::endl ;
       usleep(1000000);
+      close(file_i2c);
+      return 0;
     }
 }
 void openi2c() {
