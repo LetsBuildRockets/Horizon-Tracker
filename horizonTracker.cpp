@@ -43,6 +43,7 @@ void range(cv::Mat &, cv::Mat&, int);
 
 
 const int fourthHeight = imgSize.height / 4;
+int framesCount = 0;
 
 /*void handle_message(const std::string & message)
 {
@@ -51,24 +52,23 @@ const int fourthHeight = imgSize.height / 4;
 }*/
 
 int main(int argc, char** argv) {
-/*  cv::VideoCapture cap(0);
+  cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
-  }*/
+  }
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
   long lasttime = getTime();
   float totalFPS = 0;
-  int framesCount = 0;
   //cv::namedWindow("Horizon Tracker",1);
   cv::Mat frame;
-  frame = cv::imread(argv[1]);
+ // frame = cv::imread(argv[1]);
   for(;;) {
      // double start = getTime();
       //double end = getTime();
       //printf("time to change contrast: %f\n", end-start);
-     //cap >> frame;
+      cap >> frame;
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
       processVideo(frame, canny);
@@ -142,6 +142,11 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
   tTwo.join();
   tThree.join();
   tFour.join();
+
+  if (framesCount % 10 == 0)
+  {
+     cv::imwrite("frames/inter" + std::to_string(framesCount) + ".jpg", canny);
+  }
 
   cv::dilate(canny, canny, dilateKernel);
   cv::erode(canny, canny, erodeKernel, negOne, 1);
