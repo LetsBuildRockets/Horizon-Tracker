@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string>
 #include <sstream>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -51,6 +53,10 @@ const int fourthHeight = imgSize.height / 4;
 }*/
 
 int main(int argc, char** argv) {
+  char const * currentfolder = std::to_string(getTime()).c_str();
+  std::string currentfolderframes = std::string(currentfolder)+"/frames";
+  mkdir(currentfolder, 0777);
+  mkdir(currentfolderframes.c_str(), 0777);
 /*  cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
@@ -63,6 +69,11 @@ int main(int argc, char** argv) {
   int framesCount = 0;
   //cv::namedWindow("Horizon Tracker",1);
   cv::Mat frame;
+
+  std::ofstream horizonTrackerData;
+  horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
+  horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
+  horizonTrackerData.flush();
   frame = cv::imread(argv[1]);
   for(;;) {
      // double start = getTime();
@@ -76,13 +87,11 @@ int main(int argc, char** argv) {
      double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
      if (framesCount % 10 == 0)
      {
-       cv::imwrite("frames/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
-       cv::imwrite("frames/canny" + std::to_string(framesCount) + ".jpg", canny);
+       cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
+       cv::imwrite(currentfolderframes+"/canny" + std::to_string(framesCount) + ".jpg", canny);
     }
-     std::ofstream horizonTrackerData;
-     horizonTrackerData.open("frame.txt", std::ofstream::app);
-     horizonTrackerData << "frame number: " << framesCount << "\t" << "angle: " << angleFromLine << "\t" << "compass heading: " << 123 << "\n";
-     horizonTrackerData.close();
+     horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << 123 << "\n";
+     horizonTrackerData.flush();
      //imshow("Horizon Tracker", canny);
      //std::cout << angleFromLine << std::endl;
      //std::ostringstream strs;
@@ -97,9 +106,9 @@ int main(int argc, char** argv) {
     float localFPS = 1000.0/(now - lasttime);
     framesCount++;
     totalFPS += localFPS;
-    printf("fps: %f\n", totalFPS/framesCount);
+    printf("fps: %f, framesCount: %d\n", totalFPS/((double)framesCount), framesCount);
     lasttime = now;
-    int keyCode = cv::waitKey(1);
+    int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
     }
