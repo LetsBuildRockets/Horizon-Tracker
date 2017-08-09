@@ -58,15 +58,13 @@ int main(int argc, char** argv) {
   std::string currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
   mkdir(currentfolderframes.c_str(), 0777);
-/*  cv::VideoCapture cap(0);
+  cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
-  }*/
+  }
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
-  long lasttime = getTime();
-  float totalFPS = 0;
   //cv::namedWindow("Horizon Tracker",1);
   cv::Mat frame;
 
@@ -74,12 +72,9 @@ int main(int argc, char** argv) {
   horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
   horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
   horizonTrackerData.flush();
-  frame = cv::imread(argv[1]);
+ // frame = cv::imread(argv[1]);
   for(;;) {
-     // double start = getTime();
-      //double end = getTime();
-      //printf("time to change contrast: %f\n", end-start);
-      //cap >> frame;
+      cap >> frame;
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
       processVideo(frame, canny);
@@ -102,16 +97,12 @@ int main(int argc, char** argv) {
      //   ws->dispatch(handle_message);
         //std::cout << "i'm stuck" << std::endl;
       //}
-    long now = getTime();
-    float localFPS = 1000.0/(now - lasttime);
     framesCount++;
-    totalFPS += localFPS;
-    printf("fps: %f, framesCount: %d\n", totalFPS/((double)framesCount), framesCount);
-    lasttime = now;
-    int keyCode = cv::waitKey(10);
+    printf("framesCount: %d\n", framesCount);
+   /* int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
-    }
+    }*/
   }
   //delete ws;
   return 0;
@@ -234,6 +225,6 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree
 
 double getTime(){
   gettimeofday(&tp, NULL);
-  double ms = tp.tv_sec * 1000 + tp.tv_usec / 1000.0;
+  double ms = (long long)tp.tv_sec * 1000 + (long long)tp.tv_usec / 1000.0;
   return ms;
 }
