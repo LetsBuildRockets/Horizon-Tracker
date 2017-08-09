@@ -13,14 +13,14 @@ int length;
 unsigned char buffer[60] = {0};
 
 
-void I2CInit();
+void initI2C();
 void compassInit();
 void readCompass(int&, int&, int&);
 
-int main()
+/*int main()
 {
   int x, y, z;
-  openi2c();
+  initI2C();
   compassInit();
   while(1)
   {
@@ -28,9 +28,9 @@ int main()
     std::cout << "x: " << x/2048.0*360 << " y: " << y/2048.0*360 << " z: " << z/2048.0*360 << std::endl ;
     usleep(1000000);
   }
-}
+}*/
 
-void I2CInit()
+void initI2C()
 {
   char *filename = (char*)"/dev/i2c-1";
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
