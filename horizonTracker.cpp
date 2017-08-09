@@ -58,22 +58,28 @@ int main(int argc, char** argv) {
   std::string currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
   mkdir(currentfolderframes.c_str(), 0777);
+  cv::Mat frame;
+  std::ofstream horizonTrackerData;
+  horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
+  horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
+  horizonTrackerData.flush();
+
   cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
   }
+  cap >> frame;
+
+  std::cout << "start" << std::endl;
+
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
   //cv::namedWindow("Horizon Tracker",1);
-  cv::Mat frame;
 
-  std::ofstream horizonTrackerData;
-  horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
-  horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
-  horizonTrackerData.flush();
  // frame = cv::imread(argv[1]);
   for(;;) {
+    printf("framesCount: %d\n", framesCount);
       cap >> frame;
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
@@ -98,7 +104,6 @@ int main(int argc, char** argv) {
         //std::cout << "i'm stuck" << std::endl;
       //}
     framesCount++;
-    printf("framesCount: %d\n", framesCount);
    /* int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
