@@ -53,15 +53,22 @@ int framesCount = 0;
     if (message == "world") { ws->close(); }
 }*/
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
+  #ifdef SERF
+  std::cout << "I'M A SERF" << std::endl;
+  #else
+  std::cout << "I'M A MASTER" << std::endl;
+  #endif
   char const * currentfolder = std::to_string(getTime()).c_str();
   std::string currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
   mkdir(currentfolderframes.c_str(), 0777);
   cv::VideoCapture cap(0);
-  if(!cap.isOpened()) {
-   std::cout << "yo this didn't open" << std::endl;
-     return -1;
+  if(!cap.isOpened())
+  {
+    std::cout << "yo this didn't open" << std::endl;
+    return -1;
   }
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
@@ -72,36 +79,37 @@ int main(int argc, char** argv) {
   horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
   horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
   horizonTrackerData.flush();
- // frame = cv::imread(argv[1]);
-  for(;;) {
-      cap >> frame;
-      cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
-      cv::Mat canny;
-      processVideo(frame, canny);
-     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
-     double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
-     if (framesCount % 10 == 0)
-     {
-       cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
-       cv::imwrite(currentfolderframes+"/canny" + std::to_string(framesCount) + ".jpg", canny);
+  // frame = cv::imread(argv[1]);
+  for(;;)
+  {
+    cap >> frame;
+    cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
+    cv::Mat canny;
+    processVideo(frame, canny);
+    std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+    double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
+    if (framesCount % 10 == 0)
+    {
+      cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
+      cv::imwrite(currentfolderframes+"/canny" + std::to_string(framesCount) + ".jpg", canny);
     }
-     horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << 123 << "\n";
-     horizonTrackerData.flush();
-     //imshow("Horizon Tracker", canny);
-     //std::cout << angleFromLine << std::endl;
-     //std::ostringstream strs;
-     //strs << angleFromLine;
-     // ws->send(strs.str());
-      //while (ws->getReadyState() != WebSocket::CLOSED) {
+    horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << 123 << "\n";
+    horizonTrackerData.flush();
+    //imshow("Horizon Tracker", canny);
+    //std::cout << angleFromLine << std::endl;
+    //std::ostringstream strs;
+    //strs << angleFromLine;
+    // ws->send(strs.str());
+    //while (ws->getReadyState() != WebSocket::CLOSED) {
     //    ws->poll();
-     //   ws->dispatch(handle_message);
-        //std::cout << "i'm stuck" << std::endl;
-      //}
+    //   ws->dispatch(handle_message);
+    //std::cout << "i'm stuck" << std::endl;
+    //}
     framesCount++;
     printf("framesCount: %d\n", framesCount);
-   /* int keyCode = cv::waitKey(10);
+    /* int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
-      return 0;
+    return 0;
     }*/
   }
   //delete ws;
@@ -111,15 +119,19 @@ int main(int argc, char** argv) {
 void range(cv::Mat & src, cv::Mat & canny, int offset) {
   cv::Mat dst;
   src.convertTo(dst, -1, contrastValue, 0);
-//  cv::medianBlur( dst, dst, 3 );
+  //  cv::medianBlur( dst, dst, 3 );
   cv::blur(dst, dst, cv::Size(3, 3));
   cv::Sobel(dst, dst, -1, 1, 1, 7);
-  for(int i = 0; i < dst.rows; i++) {
+  for(int i = 0; i < dst.rows; i++)
+  {
     cv::Vec3b* pixel = dst.ptr<cv::Vec3b>(i);
     uchar* newPixel = canny.ptr<uchar>(i+offset);
-    for(int j = 0; j < dst.cols; j++) {
-      if(pixel[j][2] > 200) {
-        if((!pixel[j][0]) && (!pixel[j][1])) {
+    for(int j = 0; j < dst.cols; j++)
+    {
+      if(pixel[j][2] > 200)
+      {
+        if((!pixel[j][0]) && (!pixel[j][1]))
+        {
           newPixel[j] = 255;
         }
       }
@@ -171,31 +183,34 @@ std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat & cannyMatrix)
           biggestThree.insert(biggestThree.begin()+0, contours[i]);
           biggestThree.erase(biggestThree.begin()+4);
         }
-        else {
+        else
+        {
         biggestThree.insert(biggestThree.begin()+1, contours[i]);
         biggestThree.erase(biggestThree.begin()+4);
         }
       }
-        else {
-          biggestThree.insert(biggestThree.begin()+2, contours[i]);
-          biggestThree.erase(biggestThree.begin()+4);
-        }
+      else
+      {
+        biggestThree.insert(biggestThree.begin()+2, contours[i]);
+        biggestThree.erase(biggestThree.begin()+4);
       }
-
+    }
   }
   return biggestThree;
 }
+
 double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree, cv::Mat & dst)
 {
   int numberofContours = 0;
   std::vector<std::vector<cv::Point> > approximatedContours;
   approximatedContours.resize(3);
   for(int i = 0; i < 3; i++) {
-    if(biggestThree[i].size() > 0 ) {
-      numberofContours++;
+    if(biggestThree[i].size() > 0 )
+    {
+    numberofContours++;
     cv::approxPolyDP(biggestThree[i], approximatedContours[i], epsilonValue, false);
+    }
   }
-}
   //cv::drawContours(dst, biggestThree, -1, cv::Scalar(100, 100, 100), 2);
   int largestDistance = 0;
   cv::Point startPoint(0,0);
@@ -223,7 +238,8 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree
   return angle;
 }
 
-double getTime(){
+double getTime()
+{
   gettimeofday(&tp, NULL);
   double ms = (long long)tp.tv_sec * 1000 + (long long)tp.tv_usec / 1000.0;
   return ms;
