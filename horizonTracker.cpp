@@ -11,6 +11,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <bcm2835.h>
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -21,6 +22,7 @@ struct timeval tp;
 #define erodeValue 8
 #define dilateValue 10
 #define epsilonValue 10
+#define PIN RPI_GPIO_P1_37
 
 const cv::Point negOne(-1, -1);
 const cv::Size imgSize(320/2, 240/2);
@@ -71,7 +73,11 @@ int main(int argc, char** argv) {
   }
   cap >> frame;
 
-  std::cout << "start" << std::endl;
+  bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_OUTP);
+  while(bcm2835_gpio_lev == LOW)
+  {
+    usleep(10000);
+  }
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
