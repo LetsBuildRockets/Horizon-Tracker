@@ -11,8 +11,12 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <bcm2835.h>
 #include <unistd.h>
+
+#ifdef __ARM
+#include <bcm2835.h>
+#define PIN RPI_BPLUS_GPIO_J8_37
+#endif
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -23,7 +27,6 @@ struct timeval tp;
 #define erodeValue 8
 #define dilateValue 10
 #define epsilonValue 10
-#define PIN RPI_BPLUS_GPIO_J8_37
 
 const cv::Point negOne(-1, -1);
 const cv::Size imgSize(320/2, 240/2);
@@ -74,13 +77,16 @@ int main(int argc, char** argv) {
      return -1;
   }
   cap >> frame;
+
   std::cout << "Ready! Waiting for takeoff!" << std::endl;
+  #ifdef __ARM__
   if(!bcm2835_init())
   {
      std::cout << "Unable to init GPIO" << std::endl;
      return -1;
   }
   bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
+  #endif
 /*  while(bcm2835_gpio_lev(PIN) == LOW)
   {
     usleep(10000);
@@ -164,7 +170,7 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
   //tFour.join();
 
 
-  range(src, canny, 0); 
+  range(src, canny, 0);
 
   if (framesCount % 10 == 0)
   {
