@@ -2,7 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <sys/time.h>
-#include <thread>
+//#include <thread>
 //#include "easywsclient/easywsclient.hpp"
 //#include "easywsclient/easywsclient.cpp"
 #include <assert.h>
@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <bcm2835.h>
+#include <unistd.h>
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -22,7 +23,7 @@ struct timeval tp;
 #define erodeValue 8
 #define dilateValue 10
 #define epsilonValue 10
-#define PIN RPI_GPIO_P1_37
+#define PIN RPI_BPLUS_GPIO_J8_37
 
 const cv::Point negOne(-1, -1);
 const cv::Size imgSize(320/2, 240/2);
@@ -45,6 +46,7 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> >,cv::Mat &);
 double getTime();
 void range(cv::Mat &, cv::Mat&, int);
 
+std::string currentfolderframes;
 
 const int fourthHeight = imgSize.height / 4;
 int framesCount = 0;
@@ -57,7 +59,7 @@ int framesCount = 0;
 
 int main(int argc, char** argv) {
   char const * currentfolder = std::to_string(getTime()).c_str();
-  std::string currentfolderframes = std::string(currentfolder)+"/frames";
+  currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
   mkdir(currentfolderframes.c_str(), 0777);
   cv::Mat frame;
@@ -72,12 +74,18 @@ int main(int argc, char** argv) {
      return -1;
   }
   cap >> frame;
-
-  bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_OUTP);
-  while(bcm2835_gpio_lev == LOW)
+  std::cout << "Ready! Waiting for takeoff!" << std::endl;
+  if(!bcm2835_init())
+  {
+     std::cout << "Unable to init GPIO" << std::endl;
+     return -1;
+  }
+  bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
+/*  while(bcm2835_gpio_lev(PIN) == LOW)
   {
     usleep(10000);
-  }
+  }*/
+  std::cout << "LAUNCH DETECTED!" << std::endl;
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
@@ -90,7 +98,7 @@ int main(int argc, char** argv) {
       cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
       cv::Mat canny;
       processVideo(frame, canny);
-     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+     /*std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
      double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
      if (framesCount % 10 == 0)
      {
@@ -108,7 +116,7 @@ int main(int argc, char** argv) {
     //    ws->poll();
      //   ws->dispatch(handle_message);
         //std::cout << "i'm stuck" << std::endl;
-      //}
+      //}*/
     framesCount++;
    /* int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
@@ -139,24 +147,28 @@ void range(cv::Mat & src, cv::Mat & canny, int offset) {
 }
 void processVideo(cv::Mat & src, cv::Mat& dst)
 {
+  printf("src: %x,  dst: %x  ", &src, &dst);
   cv::Mat canny(imgSize, CV_8UC1, black);
-  cv::Mat img1 = cv::Mat(src, cv::Rect(0, 0*fourthHeight, imgSize.width, fourthHeight));
-  cv::Mat img2 = cv::Mat(src, cv::Rect(0, 1*fourthHeight, imgSize.width, fourthHeight));
-  cv::Mat img3 = cv::Mat(src, cv::Rect(0, 2*fourthHeight, imgSize.width, fourthHeight));
-  cv::Mat img4 = cv::Mat(src, cv::Rect(0, 3*fourthHeight, imgSize.width, fourthHeight));
+  //cv::Mat img1 = cv::Mat(src, cv::Rect(0, 0*fourthHeight, imgSize.width, fourthHeight));
+  //cv::Mat img2 = cv::Mat(src, cv::Rect(0, 1*fourthHeight, imgSize.width, fourthHeight));
+  //cv::Mat img3 = cv::Mat(src, cv::Rect(0, 2*fourthHeight, imgSize.width, fourthHeight));
+  //cv::Mat img4 = cv::Mat(src, cv::Rect(0, 3*fourthHeight, imgSize.width, fourthHeight));
 
-  std::thread tOne (range, std::ref(img1), std::ref(canny), 0*fourthHeight);
-  std::thread tTwo (range, std::ref(img2), std::ref(canny), 1*fourthHeight);
-  std::thread tThree (range, std::ref(img3), std::ref(canny), 2*fourthHeight);
-  std::thread tFour (range, std::ref(img4), std::ref(canny), 3*fourthHeight);
-  tOne.join();
-  tTwo.join();
-  tThree.join();
-  tFour.join();
+  //std::thread tOne (range, std::ref(img1), std::ref(canny), 0*fourthHeight);
+  //std::thread tTwo (range, std::ref(img2), std::ref(canny), 1*fourthHeight);
+  //std::thread tThree (range, std::ref(img3), std::ref(canny), 2*fourthHeight);
+  //std::thread tFour (range, std::ref(img4), std::ref(canny), 3*fourthHeight);
+  //tOne.join();
+  //tTwo.join();
+  //tThree.join();
+  //tFour.join();
+
+
+  range(src, canny, 0); 
 
   if (framesCount % 10 == 0)
   {
-     cv::imwrite("frames/inter" + std::to_string(framesCount) + ".jpg", canny);
+     cv::imwrite(currentfolderframes + "/inter" + std::to_string(framesCount) + ".jpg", canny);
   }
 
   cv::dilate(canny, canny, dilateKernel);
