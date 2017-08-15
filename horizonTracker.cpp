@@ -19,7 +19,7 @@
 #define PIN RPI_BPLUS_GPIO_J8_37
 #endif
 
-#define USE_VIDEO 0
+#define USE_VIDEO 1
 
 struct timeval tp;
 //using easywsclient::WebSocket;
