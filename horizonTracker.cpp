@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
-  cv::namedWindow("Horizon Tracker",1);
+//  cv::namedWindow("Horizon Tracker",1);
 
   for(;;) {
     printf("framesCount: %d\n", framesCount);
