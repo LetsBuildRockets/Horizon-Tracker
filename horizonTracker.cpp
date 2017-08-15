@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
-  cv::namedWindow("Horizon Tracker",1);
+  //cv::namedWindow("Horizon Tracker",1);
 
   for(;;) {
     printf("framesCount: %d\n", framesCount);
@@ -213,7 +213,7 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
   cv::erode(canny, canny, erodeKernel, negOne, 1);
   cv::Canny(canny, dst, 0, 255, 3);
 
-  imshow("Horizon Tracker", dst);
+//  imshow("Horizon Tracker", dst);
 }
 
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat & cannyMatrix)
