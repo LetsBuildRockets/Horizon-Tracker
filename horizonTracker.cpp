@@ -18,7 +18,7 @@
 #define PIN RPI_BPLUS_GPIO_J8_37
 #endif
 
-#define USE_VIDEO
+#define USE_VIDEO 1
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
   horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
   horizonTrackerData.flush();
 
-  #ifdef USE_VIDEO
+  #if USE_VIDEO
   cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
@@ -108,15 +108,13 @@ int main(int argc, char** argv) {
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
-  //cv::namedWindow("Horizon Tracker",1);
+  cv::namedWindow("Horizon Tracker",1);
 
   for(;;) {
     printf("framesCount: %d\n", framesCount);
-    #ifdef USE_VIDEO
+    #if USE_VIDEO
     cap >> frame;
     #endif
-    int* ptr = frame.ptr<int>(0);
-    //printf("data: %x\n", ptr[0]);
     cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
     cv::Mat canny;
     processVideo(frame, canny);
@@ -129,7 +127,6 @@ int main(int argc, char** argv) {
     }
     horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << 123 << "\n";
     horizonTrackerData.flush();
-    //imshow("Horizon Tracker", canny);
     //std::cout << angleFromLine << std::endl;
     //std::ostringstream strs;
     //strs << angleFromLine;
@@ -140,10 +137,12 @@ int main(int argc, char** argv) {
     //std::cout << "i'm stuck" << std::endl;
     //}
     framesCount++;
-    /* int keyCode = cv::waitKey(10);
+    #if !USE_VIDEO
+    int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
-    }*/
+    }
+    #endif
   }
   //delete ws;
   return 0;
@@ -151,16 +150,33 @@ int main(int argc, char** argv) {
 
 void range(cv::Mat & src, cv::Mat & canny, int offset) {
   cv::Mat dst;
-  src.convertTo(dst, -1, contrastValue, 0);
+  cv::Mat hsv;
+//  src.convertTo(dst, -1, contrastValue, 0);
 //  cv::medianBlur( dst, dst, 3 );
+  cvtColor(src, hsv, CV_BGR2HSV);
+  unsigned char inc = 200;
+  for(int i = 0; i < hsv.rows; i++) {
+    cv::Vec3b* pixel = hsv.ptr<cv::Vec3b>(i);
+    for(int j = 0; j < hsv.cols; j++) {
+      if(pixel[j][1] <= 255-inc)
+      {
+        pixel[j][1] = pixel[j][1] + inc;
+      }
+      else
+      {
+        pixel[j][1] = 255;
+      }
+    }
+  }
+    cvtColor(hsv, dst, CV_HSV2BGR);
   cv::blur(dst, dst, cv::Size(3, 3));
   cv::Sobel(dst, dst, -1, 1, 1, 7);
   for(int i = 0; i < dst.rows; i++) {
     cv::Vec3b* pixel = dst.ptr<cv::Vec3b>(i);
     uchar* newPixel = canny.ptr<uchar>(i+offset);
     for(int j = 0; j < dst.cols; j++) {
-      if(pixel[j][2] > 200) {
-        if((!pixel[j][0]) && (!pixel[j][1])) {
+      if(pixel[j][0] > 200) {
+        if((!pixel[j][2]) && (!pixel[j][1])) {
           newPixel[j] = 255;
         }
       }
@@ -196,6 +212,8 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
   cv::dilate(canny, canny, dilateKernel);
   cv::erode(canny, canny, erodeKernel, negOne, 1);
   cv::Canny(canny, dst, 0, 255, 3);
+
+  imshow("Horizon Tracker", dst);
 }
 
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat & cannyMatrix)
