@@ -71,12 +71,12 @@ int main(int argc, char** argv) {
   horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
   horizonTrackerData.flush();
 
-  cv::VideoCapture cap(0);
+  /*cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
   }
-  cap >> frame;
+  cap >> frame;*/
 
   std::cout << "Ready! Waiting for takeoff!" << std::endl;
   #ifdef __ARM__
@@ -97,34 +97,36 @@ int main(int argc, char** argv) {
   //assert(ws);
   //cv::namedWindow("Horizon Tracker",1);
 
- // frame = cv::imread(argv[1]);
+  frame = cv::imread(argv[1]);
   for(;;) {
     printf("framesCount: %d\n", framesCount);
-      cap >> frame;
-      cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
-      cv::Mat canny;
-      processVideo(frame, canny);
-     /*std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
-     double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
-     if (framesCount % 10 == 0)
-     {
-       cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
-       cv::imwrite(currentfolderframes+"/canny" + std::to_string(framesCount) + ".jpg", canny);
+    //cap >> frame;
+    int* ptr = frame.ptr<int>(0);
+    printf("data: %x\n", ptr[0]);
+    cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
+    cv::Mat canny;
+    processVideo(frame, canny);
+    /*std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+    double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
+    if (framesCount % 10 == 0)
+    {
+      cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
+      cv::imwrite(currentfolderframes+"/canny" + std::to_string(framesCount) + ".jpg", canny);
     }
-     horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << 123 << "\n";
-     horizonTrackerData.flush();
-     //imshow("Horizon Tracker", canny);
-     //std::cout << angleFromLine << std::endl;
-     //std::ostringstream strs;
-     //strs << angleFromLine;
-     // ws->send(strs.str());
-      //while (ws->getReadyState() != WebSocket::CLOSED) {
+    horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << 123 << "\n";
+    horizonTrackerData.flush();
+    //imshow("Horizon Tracker", canny);
+    //std::cout << angleFromLine << std::endl;
+    //std::ostringstream strs;
+    //strs << angleFromLine;
+    // ws->send(strs.str());
+    //while (ws->getReadyState() != WebSocket::CLOSED) {
     //    ws->poll();
-     //   ws->dispatch(handle_message);
-        //std::cout << "i'm stuck" << std::endl;
-      //}*/
+    //   ws->dispatch(handle_message);
+    //std::cout << "i'm stuck" << std::endl;
+    //}*/
     framesCount++;
-   /* int keyCode = cv::waitKey(10);
+    /* int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
       return 0;
     }*/
@@ -153,7 +155,7 @@ void range(cv::Mat & src, cv::Mat & canny, int offset) {
 }
 void processVideo(cv::Mat & src, cv::Mat& dst)
 {
-  printf("src: %x,  dst: %x  ", &src, &dst);
+  // printf("src: %x,  dst: %x  ", &src, &dst);
   cv::Mat canny(imgSize, CV_8UC1, black);
   //cv::Mat img1 = cv::Mat(src, cv::Rect(0, 0*fourthHeight, imgSize.width, fourthHeight));
   //cv::Mat img2 = cv::Mat(src, cv::Rect(0, 1*fourthHeight, imgSize.width, fourthHeight));
