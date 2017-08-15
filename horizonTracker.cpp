@@ -18,7 +18,7 @@
 #define PIN RPI_BPLUS_GPIO_J8_37
 #endif
 
-#define USE_VIDEO 1
+#define USE_VIDEO 0
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
-  //cv::namedWindow("Horizon Tracker",1);
+  cv::namedWindow("Horizon Tracker",1);
 
   for(;;) {
     printf("framesCount: %d\n", framesCount);
@@ -120,6 +120,7 @@ int main(int argc, char** argv) {
     processVideo(frame, canny);
     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
     double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
+    //imshow("Horizon Tracker", canny);
     if (framesCount % 10 == 0)
     {
       cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
@@ -170,18 +171,20 @@ void range(cv::Mat & src, cv::Mat & canny, int offset) {
   }
     cvtColor(hsv, dst, CV_HSV2BGR);
   cv::blur(dst, dst, cv::Size(3, 3));
+//  imshow("Horizon Tracker", dst);
   cv::Sobel(dst, dst, -1, 1, 1, 7);
   for(int i = 0; i < dst.rows; i++) {
     cv::Vec3b* pixel = dst.ptr<cv::Vec3b>(i);
     uchar* newPixel = canny.ptr<uchar>(i+offset);
     for(int j = 0; j < dst.cols; j++) {
       if(pixel[j][0] > 200) {
-        if((!pixel[j][2]) && (!pixel[j][1])) {
+        //if((!pixel[j][2]) && (!pixel[j][1])) {
           newPixel[j] = 255;
-        }
+      //  }
       }
     }
   }
+  //imshow("Horizon Tracker", canny);
 }
 void processVideo(cv::Mat & src, cv::Mat& dst)
 {
@@ -203,7 +206,7 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
 
 
   range(src, canny, 0);
-
+  //imshow("Horizon Tracker", canny);
   if (framesCount % 10 == 0)
   {
      cv::imwrite(currentfolderframes + "/inter" + std::to_string(framesCount) + ".jpg", canny);
@@ -213,7 +216,6 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
   cv::erode(canny, canny, erodeKernel, negOne, 1);
   cv::Canny(canny, dst, 0, 255, 3);
 
-//  imshow("Horizon Tracker", dst);
 }
 
 std::vector<std::vector<cv::Point> > findBiggestThree(cv::Mat & cannyMatrix)
