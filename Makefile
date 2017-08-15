@@ -1,5 +1,5 @@
 ARCH := $(shell uname -m)
-ifeq ($(ARCH), armv61)
+ifeq ($(ARCH), armv6l)
 	LIBS = -lbcm2835
 endif
 horizonTracker: horizonTracker.cpp

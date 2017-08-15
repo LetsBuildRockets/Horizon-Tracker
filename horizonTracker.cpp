@@ -13,10 +13,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef __ARM
+#ifdef __ARM__
 #include <bcm2835.h>
 #define PIN RPI_BPLUS_GPIO_J8_37
 #endif
+
+#define USE_VIDEO
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -71,12 +73,16 @@ int main(int argc, char** argv) {
   horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
   horizonTrackerData.flush();
 
-  /*cv::VideoCapture cap(0);
+  #ifdef USE_VIDEO
+  cv::VideoCapture cap(0);
   if(!cap.isOpened()) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
   }
-  cap >> frame;*/
+  cap >> frame;
+  #else
+  frame = cv::imread(argv[1]);
+  #endif
 
   std::cout << "Ready! Waiting for takeoff!" << std::endl;
   #ifdef __ARM__
@@ -97,10 +103,11 @@ int main(int argc, char** argv) {
   //assert(ws);
   //cv::namedWindow("Horizon Tracker",1);
 
-  frame = cv::imread(argv[1]);
   for(;;) {
     printf("framesCount: %d\n", framesCount);
-    //cap >> frame;
+    #ifdef USE_VIDEO
+    cap >> frame;
+    #endif
     int* ptr = frame.ptr<int>(0);
     printf("data: %x\n", ptr[0]);
     cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
