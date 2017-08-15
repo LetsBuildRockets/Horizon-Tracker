@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "compass.cpp"
 
 #ifdef __ARM__
 #include <bcm2835.h>
@@ -63,6 +64,8 @@ int framesCount = 0;
 }*/
 
 int main(int argc, char** argv) {
+  openi2c();
+  compassInit();
   char const * currentfolder = std::to_string(getTime()).c_str();
   currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
@@ -70,7 +73,7 @@ int main(int argc, char** argv) {
   cv::Mat frame;
   std::ofstream horizonTrackerData;
   horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
-  horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass heading" << "\n";
+  horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
   horizonTrackerData.flush();
 
   #if USE_VIDEO
@@ -116,6 +119,8 @@ int main(int argc, char** argv) {
     cap >> frame;
     #endif
     cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
+    short x, y, z;
+    readCompass(x, y, z);
     cv::Mat canny;
     processVideo(frame, canny);
     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
@@ -126,7 +131,7 @@ int main(int argc, char** argv) {
       cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
       cv::imwrite(currentfolderframes+"/canny" + std::to_string(framesCount) + ".jpg", canny);
     }
-    horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << 123 << "\n";
+    horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << x/2048.0*360 << "\t" << y/2048.0*360 << "\t" << z/2048.0*360 << "\n";
     horizonTrackerData.flush();
     //std::cout << angleFromLine << std::endl;
     //std::ostringstream strs;

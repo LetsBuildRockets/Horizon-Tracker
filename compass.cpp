@@ -19,7 +19,7 @@ void readCompass(short&, short&, short&);
 int I2CRead(unsigned char, unsigned char&);
 int I2CWrite(unsigned char, unsigned char);
 
-int main()
+/*int main()
 {
     short x, y, z;
     openi2c();
@@ -32,7 +32,7 @@ int main()
     }
     close(file_i2c);
     return 0;
-}
+}*/
 void openi2c() {
   char *filename = (char*)"/dev/i2c-1";
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
