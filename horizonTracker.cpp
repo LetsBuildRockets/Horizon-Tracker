@@ -79,10 +79,13 @@ int main(int argc, char** argv) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
   }
-  printf("CV_CAP_PROP_FRAME_WIDTH: %I\n", cap.get(CV_CAP_PROP_FRAME_WIDTH));
-  printf("CV_CAP_PROP_FRAME_HIEGHT: %I\n", cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-  printf("CV_CAP_PROP_FPS: %I\n", cap.get(CV_CAP_PROP_FPS));
-  printf("CV_CAP_PROP_FOURCC: %s\n", cap.get(CV_CAP_PROP_FOURCC));
+  cap.set(CV_CAP_PROP_FPS, 15);
+  printf("CV_CAP_PROP_FRAME_WIDTH: %f\n", cap.get(CV_CAP_PROP_FRAME_WIDTH));
+  printf("CV_CAP_PROP_FRAME_HIEGHT: %f\n", cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+  printf("CV_CAP_PROP_FPS: %f\n", cap.get(CV_CAP_PROP_FPS));
+  printf("CV_CAP_PROP_FOURCC: %f\n", cap.get(CV_CAP_PROP_FOURCC));
+  printf("x264: %f\n", CV_FOURCC('X','2','6','4'));
+  printf("MJPG: %f\n", CV_FOURCC('M','J','P','G'));
   cap >> frame;
   #else
   frame = cv::imread(argv[1]);
@@ -113,11 +116,11 @@ int main(int argc, char** argv) {
     cap >> frame;
     #endif
     int* ptr = frame.ptr<int>(0);
-    printf("data: %x\n", ptr[0]);
+    //printf("data: %x\n", ptr[0]);
     cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
     cv::Mat canny;
     processVideo(frame, canny);
-    /*std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
+    std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
     double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
     if (framesCount % 10 == 0)
     {
@@ -135,7 +138,7 @@ int main(int argc, char** argv) {
     //    ws->poll();
     //   ws->dispatch(handle_message);
     //std::cout << "i'm stuck" << std::endl;
-    //}*/
+    //}
     framesCount++;
     /* int keyCode = cv::waitKey(10);
     if(keyCode >= 0 && keyCode != 255) {
