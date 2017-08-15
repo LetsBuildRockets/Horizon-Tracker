@@ -79,6 +79,10 @@ int main(int argc, char** argv) {
    std::cout << "yo this didn't open" << std::endl;
      return -1;
   }
+  printf("CV_CAP_PROP_FRAME_WIDTH: %I\n", cap.get(CV_CAP_PROP_FRAME_WIDTH));
+  printf("CV_CAP_PROP_FRAME_HIEGHT: %I\n", cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+  printf("CV_CAP_PROP_FPS: %I\n", cap.get(CV_CAP_PROP_FPS));
+  printf("CV_CAP_PROP_FOURCC: %s\n", cap.get(CV_CAP_PROP_FOURCC));
   cap >> frame;
   #else
   frame = cv::imread(argv[1]);
