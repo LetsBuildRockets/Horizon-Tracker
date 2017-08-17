@@ -31,6 +31,10 @@ struct timeval tp;
 #define dilateValue 10
 #define epsilonValue 10
 
+enum Mode { SERF, MASTER };
+
+Mode mode = MASTER;
+
 const cv::Point negOne(-1, -1);
 const cv::Size imgSize(320/2, 240/2);
 const cv::Scalar black(0);
@@ -64,8 +68,21 @@ int framesCount = 0;
 }*/
 
 int main(int argc, char** argv) {
-  openi2c();
-  compassInit();
+  #if USE_VIDEO
+    if(argc > 1)
+    {
+      if(std::string(argv[1]).compare("--SERF") == 0)
+      {
+         mode = SERF;
+      }
+    }
+  #endif
+
+  if(mode == MASTER) {
+    openi2c();
+    compassInit();
+  }
+
   char const * currentfolder = std::to_string(getTime()).c_str();
   currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
@@ -120,7 +137,13 @@ int main(int argc, char** argv) {
     #endif
     cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
     short x, y, z;
-    readCompass(x, y, z);
+    x=0;
+    y=0;
+    z=0;
+    if (mode == MASTER)
+    {
+       readCompass(x, y, z);
+    }
     cv::Mat canny;
     processVideo(frame, canny);
     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
