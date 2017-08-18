@@ -52,18 +52,18 @@ int main(int argc, char** argv) {
       if(std::string(argv[1]).compare("--MASTER") == 0)
       {
          mode = MASTER;
-         enableDelay == true;
+         enableDelay = true;
       }
       else if(std::string(argv[1]).compare("--SERF") == 0)
       {
         mode = SERF;
-        enableDelay == true;
+        enableDelay = true;
       }
       if(argc > 2)
       {
         if(std::string(argv[2]).compare("--NO-DELAY") == 0)
         {
-          enableDelay == false;
+          enableDelay = false;
         }
         else
         {
@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
   }
 
   UARTInit();
+
   char const * currentfolder = std::to_string(getTime()).c_str();
   currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
@@ -134,7 +135,7 @@ int main(int argc, char** argv) {
         {
           usleep(1000);
         }
-        sendStartByte();
+        writeStartByte();
       }
       else if(mode == SERF)
       {
@@ -207,7 +208,7 @@ int main(int argc, char** argv) {
         return 0;
       }
     }
-      }
+  }
   //delete ws;
   return 0;
 }

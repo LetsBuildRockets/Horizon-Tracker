@@ -10,6 +10,12 @@ const int DOUBLE_SIZE = sizeof(double);
 
 int uart0filestream = -1;
 
+void UARTInit();
+int writeStartByte();
+int writeAngleData(double&);
+int readAngleData(double&);
+int readStartByte();
+
 void UARTInit()
 {
   uart0filestream = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY | O_NDELAY);
@@ -17,7 +23,6 @@ void UARTInit()
   {
     printf("Cant open UART\n");
   }
-
   struct termios options;
   tcgetattr(uart0filestream, &options);
   options.c_cflag = B9600 | CS8 | CLOCAL | CREAD;
@@ -76,12 +81,7 @@ int readAngleData(double & angle)
   {
     unsigned char rx_buffer[256];
     int rx_length = read(uart0filestream, (void*)rx_buffer, 255);
-    if(rx_length < 0)
-    {
-      printf("Some uart error occurred. Why are there LESS than 0 bytes in the buffer!!!\n");
-      return -1;
-    }
-    else if(rx_length == 0)
+    if(rx_length <= 0)
     {
       // no data
       return 0;
@@ -111,12 +111,8 @@ int readStartByte()
   {
     unsigned char rx_buffer[256];
     int rx_length = read(uart0filestream, (void*)rx_buffer, 255);
-    if(rx_length < 0)
-    {
-      printf("Some uart error occurred. Why are there LESS than 0 bytes in the buffer!!!\n");
-      return -1;
-    }
-    else if(rx_length == 0)
+    printf("opened: %d\n", rx_length);
+    if(rx_length <= 0)
     {
       // no data
       return 0;

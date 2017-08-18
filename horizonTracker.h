@@ -12,7 +12,7 @@
 
 #ifndef _HORIZON_TRACKER_H_
 #define _HORIZON_TRACKER_H_
-#ifdef __ARMEL_
+#ifdef __ARMEL__
   #include <bcm2835.h>
   #define PIN RPI_BPLUS_GPIO_J8_37
 #endif
