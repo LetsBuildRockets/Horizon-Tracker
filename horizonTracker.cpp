@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include "compass.cpp"
 
-#ifdef __ARM__
+#ifdef __ARMEL_
   #include <bcm2835.h>
   #define PIN RPI_BPLUS_GPIO_J8_37
 #endif
@@ -31,6 +31,8 @@ struct timeval tp;
 
 enum Mode { UNDEF, SERF, MASTER, USESTILL };
 Mode mode = UNDEF;
+
+bool enableDelay = false;
 
 const cv::Point negOne(-1, -1);
 const cv::Size imgSize(320/2, 240/2);
@@ -70,6 +72,11 @@ int main(int argc, char** argv) {
     if(std::string(argv[1]).compare("--MASTER") == 0)
     {
        mode = MASTER;
+       enableDelay = true;
+    }
+    else if(std::string(argv[1]).compare("--MASTER-NO-DELAY") == 0)
+    {
+      mode = MASTER;
     }
     else if(std::string(argv[1]).compare("--SERF") == 0)
     {
@@ -86,7 +93,7 @@ int main(int argc, char** argv) {
   }
   if(mode == UNDEF)
   {
-    printf("Please specify a mode:\n --MASTER\n --SERF\n --USE-STILL\n");
+    printf("Please specify a mode:\n --MASTER\n --MASTER-NO-DELAY\n --SERF\n --USE-STILL\n");
     return -1;
   }
 
@@ -122,18 +129,21 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "Ready! Waiting for takeoff!" << std::endl;
-  #ifdef __ARM__
+  #ifdef __ARMEL__
   if(!bcm2835_init())
   {
      std::cout << "Unable to init GPIO" << std::endl;
      return -1;
-  }
-  bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
-  #endif
-/*  while(bcm2835_gpio_lev(PIN) == LOW)
+  }s
+  if(enableDelay == true)
   {
-    usleep(10000);
-  }*/
+    bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
+    while(bcm2835_gpio_lev(PIN) == LOW)
+    {
+      usleep(1000);
+    }
+  }
+  #endif
   std::cout << "LAUNCH DETECTED!" << std::endl;
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());

@@ -38,7 +38,7 @@ void openi2c() {
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
 	{
 		//ERROR HANDLING: you can check errno to see what went wrong
-		printf("Failed to open the i2c bus");
+		printf("Failed to open the i2c bus\n");
 		return;
 	}
 }
