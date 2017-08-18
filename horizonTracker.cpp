@@ -29,6 +29,7 @@ std::string currentfolderframes;
 
 const int fourthHeight = imgSize.height / 4;
 int framesCount = 0;
+const int frameRate = 15;
 
 /*void handle_message(const std::string & message)
 {
@@ -98,7 +99,7 @@ int main(int argc, char** argv) {
   if(mode == MASTER)
   {
     horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
-    horizonTrackerData << "frame number" << "\t" << "angle1" << "\t" << "angle2" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
+    horizonTrackerData << "frame" << "\t" << "time" << "\t" << "angle1" << "\t" << "angle2" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
     horizonTrackerData.flush();
   }
 
@@ -114,7 +115,7 @@ int main(int argc, char** argv) {
      std::cout << "yo this didn't open" << std::endl;
        return -1;
     }
-    cap.set(CV_CAP_PROP_FPS, 15);
+    cap.set(CV_CAP_PROP_FPS, frameRate);
     cap >> frame;
   }
 
@@ -184,7 +185,7 @@ int main(int argc, char** argv) {
     {
       double serfsAngle;
       readAngleData(serfsAngle);
-      horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << serfsAngle << "\t"  << x/2048.0*360 << "\t" << y/2048.0*360 << "\t" << z/2048.0*360 << "\n";
+      horizonTrackerData << framesCount << "\t" << (framesCount*1000)/frameRate << "\t" << angleFromLine << "\t"  << serfsAngle << "\t"  << x/2048.0*360 << "\t" << y/2048.0*360 << "\t" << z/2048.0*360 << "\n";
       horizonTrackerData.flush();
     }
     else if(mode == SERF)
