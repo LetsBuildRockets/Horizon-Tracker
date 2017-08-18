@@ -15,11 +15,9 @@
 #include "compass.cpp"
 
 #ifdef __ARM__
-#include <bcm2835.h>
-#define PIN RPI_BPLUS_GPIO_J8_37
+  #include <bcm2835.h>
+  #define PIN RPI_BPLUS_GPIO_J8_37
 #endif
-
-#define USE_VIDEO 1
 
 struct timeval tp;
 //using easywsclient::WebSocket;
@@ -31,9 +29,8 @@ struct timeval tp;
 #define dilateValue 10
 #define epsilonValue 10
 
-enum Mode { SERF, MASTER };
-
-Mode mode = MASTER;
+enum Mode { UNDEF, SERF, MASTER, USESTILL };
+Mode mode = UNDEF;
 
 const cv::Point negOne(-1, -1);
 const cv::Size imgSize(320/2, 240/2);
@@ -68,15 +65,30 @@ int framesCount = 0;
 }*/
 
 int main(int argc, char** argv) {
-  #if USE_VIDEO
-    if(argc > 1)
+  if(argc > 1)
+  {
+    if(std::string(argv[1]).compare("--MASTER") == 0)
     {
-      if(std::string(argv[1]).compare("--SERF") == 0)
-      {
-         mode = SERF;
+       mode = MASTER;
+    }
+    else if(std::string(argv[1]).compare("--SERF") == 0)
+    {
+      mode = SERF;
+    }
+    else if(std::string(argv[1]).compare("--USE-STILL") == 0)
+    {
+      mode = USESTILL;
+      if(!(argc > 2)){
+        printf("Please specify an image path\n");
+        return -1;
       }
     }
-  #endif
+  }
+  if(mode == UNDEF)
+  {
+    printf("Please specify a mode:\n\t--MASTER\n\t--SERF\n\t--USE-STILL\n");
+    return -1;
+  }
 
   if(mode == MASTER) {
     openi2c();
@@ -93,23 +105,26 @@ int main(int argc, char** argv) {
   horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
   horizonTrackerData.flush();
 
-  #if USE_VIDEO
   cv::VideoCapture cap(0);
-  if(!cap.isOpened()) {
-   std::cout << "yo this didn't open" << std::endl;
-     return -1;
+  if(mode == USESTILL)
+  {
+    frame = cv::imread(argv[2]);
   }
-  cap.set(CV_CAP_PROP_FPS, 15);
-  printf("CV_CAP_PROP_FRAME_WIDTH: %f\n", cap.get(CV_CAP_PROP_FRAME_WIDTH));
-  printf("CV_CAP_PROP_FRAME_HIEGHT: %f\n", cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-  printf("CV_CAP_PROP_FPS: %f\n", cap.get(CV_CAP_PROP_FPS));
-  printf("CV_CAP_PROP_FOURCC: %f\n", cap.get(CV_CAP_PROP_FOURCC));
-  printf("x264: %f\n", CV_FOURCC('X','2','6','4'));
-  printf("MJPG: %f\n", CV_FOURCC('M','J','P','G'));
-  cap >> frame;
-  #else
-  frame = cv::imread(argv[1]);
-  #endif
+  else
+  {
+    if(!cap.isOpened()) {
+     std::cout << "yo this didn't open" << std::endl;
+       return -1;
+    }
+    cap.set(CV_CAP_PROP_FPS, 15);
+    printf("CV_CAP_PROP_FRAME_WIDTH: %f\n", cap.get(CV_CAP_PROP_FRAME_WIDTH));
+    printf("CV_CAP_PROP_FRAME_HIEGHT: %f\n", cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+    printf("CV_CAP_PROP_FPS: %f\n", cap.get(CV_CAP_PROP_FPS));
+    printf("CV_CAP_PROP_FOURCC: %f\n", cap.get(CV_CAP_PROP_FOURCC));
+    printf("x264: %f\n", CV_FOURCC('X','2','6','4'));
+    printf("MJPG: %f\n", CV_FOURCC('M','J','P','G'));
+    cap >> frame;
+  }
 
   std::cout << "Ready! Waiting for takeoff!" << std::endl;
   #ifdef __ARM__
@@ -132,9 +147,11 @@ int main(int argc, char** argv) {
 
   for(;;) {
     printf("framesCount: %d\n", framesCount);
-    #if USE_VIDEO
-    cap >> frame;
-    #endif
+    if(mode != USESTILL)
+    {
+      cap >> frame;
+    }
+
     cv::resize(frame, frame, imgSize, 0, 0, cv::INTER_CUBIC);
     short x, y, z;
     x=0;
@@ -166,13 +183,14 @@ int main(int argc, char** argv) {
     //std::cout << "i'm stuck" << std::endl;
     //}
     framesCount++;
-    #if !USE_VIDEO
-    int keyCode = cv::waitKey(10);
-    if(keyCode >= 0 && keyCode != 255) {
-      return 0;
+    if(mode == USESTILL)
+    {
+      int keyCode = cv::waitKey(10);
+      if(keyCode >= 0 && keyCode != 255) {
+        return 0;
+      }
     }
-    #endif
-  }
+      }
   //delete ws;
   return 0;
 }
