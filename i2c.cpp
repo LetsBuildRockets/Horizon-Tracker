@@ -35,7 +35,7 @@ int I2CWrite(unsigned char, unsigned char);
 }*/
 void openi2c() {
   char *filename = (char*)"/dev/i2c-1";
-	if ((file_i2c = open(filename, O_RDWR)) < 0)
+	if((file_i2c = open(filename, O_RDWR)) < 0)
 	{
 		//ERROR HANDLING: you can check errno to see what went wrong
 		printf("Failed to open the i2c bus\n");
@@ -61,7 +61,7 @@ void readCompass(short& x, short& y, short& z)
   I2CRead(0x08, value[5]);
   /*buffer[0] = 0x03;
   length = 1;
-  if (write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+  if(write(file_i2c, buffer, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
   {
   		// ERROR HANDLING: i2c transaction failed
   		printf("3) Failed to write to the i2c bus.\n");
@@ -70,7 +70,7 @@ void readCompass(short& x, short& y, short& z)
   {
     usleep(1000);
     length = 1;			//<<< Number of bytes to read
-    if (read(file_i2c, buffer, length) != length)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
+    if(read(file_i2c, buffer, length) != length)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
     {
       //ERROR HANDLING: i2c transaction failed
       printf("Failed to read from the i2c bus.\n");

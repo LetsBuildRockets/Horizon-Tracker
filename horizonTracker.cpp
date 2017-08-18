@@ -1,36 +1,6 @@
-#include <opencv2/opencv.hpp>
-#include <iostream>
-#include <math.h>
-#include <sys/time.h>
-//#include <thread>
-//#include "easywsclient/easywsclient.hpp"
-//#include "easywsclient/easywsclient.cpp"
-#include <assert.h>
-#include <stdio.h>
-#include <string>
-#include <sstream>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include "compass.cpp"
-
-#ifdef __ARMEL_
-  #include <bcm2835.h>
-  #define PIN RPI_BPLUS_GPIO_J8_37
-#endif
-
-struct timeval tp;
-//using easywsclient::WebSocket;
-//static WebSocket::pointer ws = NULL;
-
-#define PI 3.14159
-#define contrastValue 2.7
-#define erodeValue 8
-#define dilateValue 10
-#define epsilonValue 10
-
-enum Mode { UNDEF, SERF, MASTER, USESTILL };
-Mode mode = UNDEF;
+#include "horizonTracker.h"
+#include "uart.cpp"
+#include "i2c.cpp"
 
 bool enableDelay = false;
 
@@ -63,26 +33,13 @@ int framesCount = 0;
 /*void handle_message(const std::string & message)
 {
     printf(">>> %s\n", message.c_str());
-    if (message == "world") { ws->close(); }
+    if(message == "world") { ws->close(); }
 }*/
 
 int main(int argc, char** argv) {
   if(argc > 1)
   {
-    if(std::string(argv[1]).compare("--MASTER") == 0)
-    {
-       mode = MASTER;
-       enableDelay = true;
-    }
-    else if(std::string(argv[1]).compare("--MASTER-NO-DELAY") == 0)
-    {
-      mode = MASTER;
-    }
-    else if(std::string(argv[1]).compare("--SERF") == 0)
-    {
-      mode = SERF;
-    }
-    else if(std::string(argv[1]).compare("--USE-STILL") == 0)
+    if(std::string(argv[1]).compare("--USE-STILL") == 0)
     {
       mode = USESTILL;
       if(!(argc > 2)){
@@ -90,10 +47,36 @@ int main(int argc, char** argv) {
         return -1;
       }
     }
+    else
+    {
+      if(std::string(argv[1]).compare("--MASTER") == 0)
+      {
+         mode = MASTER;
+         enableDelay == true;
+      }
+      else if(std::string(argv[1]).compare("--SERF") == 0)
+      {
+        mode = SERF;
+        enableDelay == true;
+      }
+      if(argc > 2)
+      {
+        if(std::string(argv[2]).compare("--NO-DELAY") == 0)
+        {
+          enableDelay == false;
+        }
+        else
+        {
+          printf("What? I don't understand your second flag...\n");
+          return -1;
+        }
+      }
+    }
   }
+
   if(mode == UNDEF)
   {
-    printf("Please specify a mode:\n --MASTER\n --MASTER-NO-DELAY\n --SERF\n --USE-STILL\n");
+    printf("Please specify a mode:\n --MASTER\n --MASTER --NO-DELAY\n --SERF\n --SERF --NO-DELAY\n --USE-STILL\n");
     return -1;
   }
 
@@ -103,15 +86,21 @@ int main(int argc, char** argv) {
     compassInit();
   }
 
+  UARTInit();
   char const * currentfolder = std::to_string(getTime()).c_str();
   currentfolderframes = std::string(currentfolder)+"/frames";
   mkdir(currentfolder, 0777);
   mkdir(currentfolderframes.c_str(), 0777);
   cv::Mat frame;
   std::ofstream horizonTrackerData;
-  horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
-  horizonTrackerData << "frame number" << "\t" << "angle" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
-  horizonTrackerData.flush();
+
+  if(mode == MASTER)
+  {
+    horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
+    horizonTrackerData << "frame number" << "\t" << "angle1" << "\t" << "angle2" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
+    horizonTrackerData.flush();
+  }
+
 
   cv::VideoCapture cap(0);
   if(mode == USESTILL)
@@ -130,21 +119,34 @@ int main(int argc, char** argv) {
 
   std::cout << "Ready! Waiting for takeoff!" << std::endl;
   #ifdef __ARMEL__
-  if(!bcm2835_init())
-  {
-     std::cout << "Unable to init GPIO" << std::endl;
-     return -1;
-  }s
-  if(enableDelay == true)
-  {
-    bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
-    while(bcm2835_gpio_lev(PIN) == LOW)
+    if(enableDelay == true)
     {
-      usleep(1000);
+      if(mode == MASTER )
+      {
+        if(!bcm2835_init())
+        {
+           std::cout << "Unable to init GPIO" << std::endl;
+           return -1;
+        }
+
+        bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_INPT);
+        while(bcm2835_gpio_lev(PIN) == LOW)
+        {
+          usleep(1000);
+        }
+        sendStartByte();
+      }
+      else if(mode == SERF)
+      {
+        while (!(readStartByte() > 0))
+        {
+          usleep(1000);
+        }
+      }
     }
-  }
   #endif
   std::cout << "LAUNCH DETECTED!" << std::endl;
+
 
   // ws = WebSocket::from_url("ws://localhost:8126/foo", std::string());
   //assert(ws);
@@ -162,7 +164,7 @@ int main(int argc, char** argv) {
     x=0;
     y=0;
     z=0;
-    if (mode == MASTER)
+    if(mode == MASTER)
     {
        readCompass(x, y, z);
     }
@@ -171,13 +173,23 @@ int main(int argc, char** argv) {
     std::vector<std::vector<cv::Point> > biggestThreeContours = findBiggestThree(canny);
     double angleFromLine = getAngleFromLargestLine(biggestThreeContours, canny);
     //imshow("Horizon Tracker", canny);
-    if (framesCount % 10 == 0)
+    if(framesCount % 10 == 0)
     {
       cv::imwrite(currentfolderframes+"/cameraImage" + std::to_string(framesCount) + ".jpg", frame);
       cv::imwrite(currentfolderframes+"/canny" + std::to_string(framesCount) + ".jpg", canny);
     }
-    horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << x/2048.0*360 << "\t" << y/2048.0*360 << "\t" << z/2048.0*360 << "\n";
-    horizonTrackerData.flush();
+
+    if(mode == MASTER)
+    {
+      double serfsAngle;
+      readAngleData(serfsAngle);
+      horizonTrackerData << framesCount << "\t"  << angleFromLine << "\t"  << serfsAngle << "\t"  << x/2048.0*360 << "\t" << y/2048.0*360 << "\t" << z/2048.0*360 << "\n";
+      horizonTrackerData.flush();
+    }
+    else if(mode == SERF)
+    {
+      writeAngleData(angleFromLine);
+    }
     //std::cout << angleFromLine << std::endl;
     //std::ostringstream strs;
     //strs << angleFromLine;
@@ -259,7 +271,7 @@ void processVideo(cv::Mat & src, cv::Mat& dst)
 
   range(src, canny, 0);
   //imshow("Horizon Tracker", canny);
-  if (framesCount % 10 == 0)
+  if(framesCount % 10 == 0)
   {
      cv::imwrite(currentfolderframes + "/inter" + std::to_string(framesCount) + ".jpg", canny);
   }
@@ -326,7 +338,7 @@ double getAngleFromLargestLine(std::vector<std::vector<cv::Point> > biggestThree
     for(int i = 0; i < approximatedContours[x].size()-1; i++)
     {
       int distance = pow((approximatedContours[x][i].x - approximatedContours[x][i+1].x),2) + pow((approximatedContours[x][i].y - approximatedContours[x][i+1].y),2);
-      if (distance > largestDistance)
+      if(distance > largestDistance)
       {
         largestDistance = distance;
         startPoint.x = approximatedContours[x][i].x;
