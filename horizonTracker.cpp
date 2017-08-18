@@ -86,11 +86,12 @@ int main(int argc, char** argv) {
   }
   if(mode == UNDEF)
   {
-    printf("Please specify a mode:\n\t--MASTER\n\t--SERF\n\t--USE-STILL\n");
+    printf("Please specify a mode:\n --MASTER\n --SERF\n --USE-STILL\n");
     return -1;
   }
 
-  if(mode == MASTER) {
+  if(mode == MASTER)
+  {
     openi2c();
     compassInit();
   }
@@ -117,12 +118,6 @@ int main(int argc, char** argv) {
        return -1;
     }
     cap.set(CV_CAP_PROP_FPS, 15);
-    printf("CV_CAP_PROP_FRAME_WIDTH: %f\n", cap.get(CV_CAP_PROP_FRAME_WIDTH));
-    printf("CV_CAP_PROP_FRAME_HIEGHT: %f\n", cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-    printf("CV_CAP_PROP_FPS: %f\n", cap.get(CV_CAP_PROP_FPS));
-    printf("CV_CAP_PROP_FOURCC: %f\n", cap.get(CV_CAP_PROP_FOURCC));
-    printf("x264: %f\n", CV_FOURCC('X','2','6','4'));
-    printf("MJPG: %f\n", CV_FOURCC('M','J','P','G'));
     cap >> frame;
   }
 
