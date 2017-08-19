@@ -15,6 +15,7 @@ int writeStartByte();
 int writeAngleData(double&);
 int readAngleData(double&);
 int readStartByte();
+void reverse_array(unsigned char*, int);
 
 void UARTInit()
 {
@@ -88,7 +89,7 @@ int readAngleData(double & angle)
     }
     else if(rx_length >= DOUBLE_SIZE)
     {
-      rx_buffer[rx_length] = '\0';
+      reverse_array(rx_buffer, DOUBLE_SIZE);
       memcpy(&angle, rx_buffer, DOUBLE_SIZE);
       return 0;
     }
@@ -119,7 +120,6 @@ int readStartByte()
     }
     else
     {
-      rx_buffer[rx_length] = '\0';
       if(rx_buffer[0] == START_BYTE)
       {
         return 1;
@@ -130,4 +130,15 @@ int readStartByte()
       }
     }
   }
+}
+
+
+void reverse_array( unsigned char array[], int arraylength )
+{
+    for (int i = 0; i < (arraylength / 2); i++)
+    {
+        unsigned char temporary = array[i];
+        array[i] = array[(arraylength - 1) - i];
+        array[(arraylength - 1) - i] = temporary;
+    }
 }
