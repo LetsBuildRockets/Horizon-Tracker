@@ -90,6 +90,7 @@ int readAngleData(double & angle)
   if(uart0filestream != -1)
   {
     int rx_length = read(uart0filestream, (void*)(rx_buffer+offset), 255-offset);
+    offset = rx_length;
     if(rx_length <= 0)
     {
       // no data
@@ -103,9 +104,11 @@ int readAngleData(double & angle)
         shiftLeft(rx_buffer, 256, 1);
       }
 
+
       //reverse_array(rx_buffer, DOUBLE_SIZE);
       memcpy(&angle, (&rx_buffer+1), DOUBLE_SIZE);
 
+      printf("%f: %x %x %x %x %x %x %x %x\n", angle, rx_buffer[1], rx_buffer[2], rx_buffer[3], rx_buffer[4], rx_buffer[5], rx_buffer[6], rx_buffer[7], rx_buffer[8])
       // pop off 9 bytes
       shiftLeft(rx_buffer, 256, 9);
       return 0;
