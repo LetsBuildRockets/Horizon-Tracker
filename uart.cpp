@@ -19,9 +19,8 @@ void reverse_array(unsigned char*, int);
 void shiftLeft(unsigned char*, int, int);
 
 
-
 unsigned char rx_buffer[256] = { 0 };
-int offset = 0;
+int bytesInBuffer = 0;
 
 void UARTInit()
 {
@@ -89,43 +88,25 @@ int readAngleData(double & angle)
   }
   if(uart0filestream != -1)
   {
-    if(offset > 200) offset = 0;
-    int rx_length = read(uart0filestream, (void*)(rx_buffer+offset), 255-offset);
-    offset += rx_length;
-    if(rx_length <= 0)
+    while(bytesInBuffer<200)
     {
-      // no data
-      return 0;
-    }
-    else if(rx_length >= DOUBLE_SIZE)
-    {
-
-      //consume bytes;
-      while(rx_buffer[0] != 0) {
-        shiftLeft(rx_buffer, 256, 1);
-        offset--;
-      }
-
-
-      //reverse_array(rx_buffer, DOUBLE_SIZE);
-      memcpy(&angle, (&rx_buffer+1), DOUBLE_SIZE);
-
-      printf("%f: %x %x %x %x %x %x %x %x\n", angle, rx_buffer[1], rx_buffer[2], rx_buffer[3], rx_buffer[4], rx_buffer[5], rx_buffer[6], rx_buffer[7], rx_buffer[8]);
-      // pop off 9 bytes
-      if(angle != 0)
+      if(read(uart0filestream, (void*)(rx_buffer+bytesInBuffer), 1) <= 0)
       {
-        shiftLeft(rx_buffer, 256, 9);
+        return -1;
       }
       else
       {
-        offset--;
+        bytesInBuffer++;
+        if(rx_buffer[0]==0 && rx_buffer[8]== 0xc0)
+        {
+          memcpy(&angle, (&rx_buffer+1), DOUBLE_SIZE);
+          printf("%f: %x %x %x %x %x %x %x %x\n", angle, rx_buffer[1], rx_buffer[2], rx_buffer[3], rx_buffer[4], rx_buffer[5], rx_buffer[6], rx_buffer[7], rx_buffer[8]);
+          return 0;
+        }
       }
-      return 0;
     }
-    else
-    {
-      printf("Some uart error occurred. We received data, but not enough to make a double!!!\n");
-      return 0;
+    if(bytesInBuffer >= 200) {
+      printf("WE FILLED THE BUFFER!\n");
     }
   }
 }
