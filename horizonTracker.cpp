@@ -96,12 +96,18 @@ int main(int argc, char** argv) {
   cv::Mat frame;
   std::ofstream horizonTrackerData;
 
-  if(mode == MASTER)
-  {
-    horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
-    horizonTrackerData << "frame" << "\t" << "time" << "\t" << "angle1" << "\t" << "angle2" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
-    horizonTrackerData.flush();
-  }
+    if(mode == MASTER)
+    {
+      horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
+      horizonTrackerData << "frame" << "\t" << "time" << "\t" << "angle1" << "\t" << "angle2" << "\t" << "compass x" << "\t" << "compass y" << "\t" << "compass z" << "\n";
+      horizonTrackerData.flush();
+    }
+    else if(mode == SERF)
+    {
+      horizonTrackerData.open(std::string(currentfolder)+"/frame.txt");
+      horizonTrackerData << "frame" << "\t" << "time" << "\t" << "angle2" << "\n";
+      horizonTrackerData.flush();
+    }
 
 
   cv::VideoCapture cap(0);
@@ -183,14 +189,15 @@ int main(int argc, char** argv) {
 
     if(mode == MASTER)
     {
-      double serfsAngle;
-      readAngleData(serfsAngle);
-      horizonTrackerData << framesCount << "\t" << (framesCount*1000)/frameRate << "\t" << angleFromLine << "\t"  << serfsAngle << "\t"  << x/2048.0*360 << "\t" << y/2048.0*360 << "\t" << z/2048.0*360 << "\n";
+      //double serfsAngle;
+      //readAngleData(serfsAngle);
+      horizonTrackerData << framesCount << "\t" << (framesCount*1000)/frameRate << "\t" << angleFromLine << "\t"  << "broken"  << "\t"  << x/2048.0*360 << "\t" << y/2048.0*360 << "\t" << z/2048.0*360 << "\n";
       horizonTrackerData.flush();
     }
     else if(mode == SERF)
     {
-      writeAngleData(angleFromLine);
+    horizonTrackerData << framesCount << "\t" << (framesCount*1000)/frameRate << "\t" << angleFromLine << "\n";
+    horizonTrackerData.flush();
     }
     //std::cout << angleFromLine << std::endl;
     //std::ostringstream strs;
