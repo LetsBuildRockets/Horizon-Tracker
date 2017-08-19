@@ -16,6 +16,12 @@ int writeAngleData(double&);
 int readAngleData(double&);
 int readStartByte();
 void reverse_array(unsigned char*, int);
+void shiftLeft(unsigned char*, int, int);
+
+
+
+unsigned char rx_buffer[256] = { 0 };
+int offset = 0;
 
 void UARTInit()
 {
@@ -59,7 +65,10 @@ int writeAngleData(double & angle) {
     printf("I'm not writing angle data. I'm the MASTER!\n");
     return -1;
   }
-  unsigned char * const data = reinterpret_cast<unsigned char * const>(&angle);
+
+  unsigned char data[DOUBLE_SIZE+1] = { 0 };
+  memcpy((&data+1), &angle, DOUBLE_SIZE);
+  //unsigned char * const doubleData = reinterpret_cast<unsigned char * const>(&angle);
   if(uart0filestream)
   {
     int count = write(uart0filestream, &data, DOUBLE_SIZE);
@@ -80,8 +89,7 @@ int readAngleData(double & angle)
   }
   if(uart0filestream != -1)
   {
-    unsigned char rx_buffer[256];
-    int rx_length = read(uart0filestream, (void*)rx_buffer, 255);
+    int rx_length = read(uart0filestream, (void*)(rx_buffer+offset), 255-offset);
     if(rx_length <= 0)
     {
       // no data
@@ -89,8 +97,17 @@ int readAngleData(double & angle)
     }
     else if(rx_length >= DOUBLE_SIZE)
     {
+
+      //consume bytes;
+      while(rx_buffer[0] != 0) {
+        shiftLeft(rx_buffer, 256, 1);
+      }
+
       reverse_array(rx_buffer, DOUBLE_SIZE);
-      memcpy(&angle, rx_buffer, DOUBLE_SIZE);
+      memcpy(&angle, (&rx_buffer+1), DOUBLE_SIZE);
+
+      // pop off 9 bytes
+      shiftLeft(rx_buffer, 256, 9);
       return 0;
     }
     else
@@ -129,6 +146,16 @@ int readStartByte()
         return 0;
       }
     }
+  }
+}
+
+void shiftLeft(unsigned char * bytes, int length, int shift)
+{
+  for(int j = 0; j < length-shift; j++) {
+    bytes[j]=bytes[j+shift];
+  }
+  for(int j = length-shift; j < length; j++) {
+    bytes[j]=bytes[0];
   }
 }
 
