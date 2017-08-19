@@ -71,7 +71,7 @@ int writeAngleData(double & angle) {
   //unsigned char * const doubleData = reinterpret_cast<unsigned char * const>(&angle);
   if(uart0filestream)
   {
-    int count = write(uart0filestream, &data, DOUBLE_SIZE);
+    int count = write(uart0filestream, &data, DOUBLE_SIZE+1);
     if(count < 0)
     {
       printf("UART TX error\n");
@@ -103,7 +103,7 @@ int readAngleData(double & angle)
         shiftLeft(rx_buffer, 256, 1);
       }
 
-      reverse_array(rx_buffer, DOUBLE_SIZE);
+      //reverse_array(rx_buffer, DOUBLE_SIZE);
       memcpy(&angle, (&rx_buffer+1), DOUBLE_SIZE);
 
       // pop off 9 bytes
