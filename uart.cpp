@@ -112,7 +112,6 @@ int readStartByte()
   {
     unsigned char rx_buffer[256];
     int rx_length = read(uart0filestream, (void*)rx_buffer, 255);
-    printf("opened: %d\n", rx_length);
     if(rx_length <= 0)
     {
       // no data
